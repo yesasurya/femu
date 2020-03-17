@@ -238,19 +238,19 @@ static void check_params(struct ssdparams *spp)
     //assert(is_power_of_2(spp->nchs));
 }
 
-static void ssd_init_params(struct ssdparams *spp)
+static void ssd_init_params(struct ssdparams *spp, FemuCtrl *n)
 {
     spp->secsz = 512;
     spp->secs_per_pg = 8;
     spp->pgs_per_blk = 256;
-    spp->blks_per_pl = 256; /* 16GB */
+    spp->blks_per_pl = n->nand_blocks_per_plane;
     spp->pls_per_lun = 1;
     spp->luns_per_ch = 8;
     spp->nchs = 8;
 
-    spp->pg_rd_lat = NAND_READ_LATENCY;
-    spp->pg_wr_lat = NAND_PROG_LATENCY;
-    spp->blk_er_lat = NAND_ERASE_LATENCY;
+    spp->pg_rd_lat = n->nand_read_lat;
+    spp->pg_wr_lat = n->nand_prog_lat;
+    spp->blk_er_lat = n->nand_erase_lat;
     spp->ch_xfer_lat = 0;
 
     /* calculated values */
@@ -284,8 +284,7 @@ static void ssd_init_params(struct ssdparams *spp)
     spp->gc_thres_lines = (int)((1 - spp->gc_thres_pcent) * spp->tt_lines);
     spp->gc_thres_pcent_high = 0.95;
     spp->gc_thres_lines_high = (int)((1 - spp->gc_thres_pcent_high) * spp->tt_lines);
-    spp->enable_gc_delay = true;
-
+    spp->enable_gc_delay = (n->nand_enable_delay == 1) ? true : false;
 
     check_params(spp);
 }
@@ -383,7 +382,7 @@ void ssd_init(FemuCtrl *n)
 
     assert(ssd);
 
-    ssd_init_params(spp);
+    ssd_init_params(spp, n);
 
     /* initialize ssd internal layout architecture */
     ssd->ch = g_malloc0(sizeof(struct ssd_channel) * spp->nchs);

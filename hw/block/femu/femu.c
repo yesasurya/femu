@@ -1144,6 +1144,16 @@ static void femu_exit(PCIDevice *pci_dev)
 
 static Property femu_props[] = {
     DEFINE_PROP_STRING("serial", FemuCtrl, serial),
+
+    /* NAND SSD delay emulation */
+    DEFINE_PROP_UINT64("nand_read_lat", FemuCtrl, nand_read_lat, 40000),
+    DEFINE_PROP_UINT64("nand_prog_lat", FemuCtrl, nand_prog_lat, 200000),
+    DEFINE_PROP_UINT64("nand_erase_lat", FemuCtrl, nand_erase_lat, 2000000),
+    DEFINE_PROP_UINT8("nand_enable_delay", FemuCtrl, nand_enable_delay, 1),
+
+    /* NAND SSD number of blocks per plane (Default: 256 blocks per plane -> 16GB) */
+    DEFINE_PROP_UINT64("nand_blocks_per_plane", FemuCtrl, nand_blocks_per_plane, 256),
+
     DEFINE_PROP_UINT32("devsz_mb", FemuCtrl, memsz, 1024), /* Coperd: in MB */
     DEFINE_PROP_UINT32("namespaces", FemuCtrl, num_namespaces, 1),
     DEFINE_PROP_UINT32("queues", FemuCtrl, num_io_queues, 1),

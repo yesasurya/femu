@@ -1204,6 +1204,15 @@ typedef struct FemuCtrl {
 
     uint8_t         multipoller_enabled;
     uint32_t        num_poller;
+
+    /* NAND SSD delay emulation */
+    uint64_t        nand_read_lat;
+    uint64_t        nand_prog_lat;
+    uint64_t        nand_erase_lat;
+    uint8_t         nand_enable_delay;
+
+    /* NAND SSD number of blocks per plane */
+    uint64_t        nand_blocks_per_plane;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {
