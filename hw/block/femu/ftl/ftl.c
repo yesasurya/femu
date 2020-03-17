@@ -7,6 +7,7 @@
 
 static void *ftl_thread(void *arg);
 
+static void *gc_thread(void *arg);
 
 static inline bool should_gc(struct ssd *ssd)
 {
@@ -403,6 +404,7 @@ void ssd_init(FemuCtrl *n)
     ssd_init_write_pointer(ssd);
 
     qemu_thread_create(&ssd->ftl_thread, "ftl_thread", ftl_thread, n, QEMU_THREAD_JOINABLE);
+    qemu_thread_create(&ssd->gc_thread, "gc_thread", gc_thread, ssd, QEMU_THREAD_JOINABLE);
 }
 
 static inline bool valid_ppa(struct ssd *ssd, struct ppa *ppa)
@@ -812,6 +814,16 @@ static int do_gc(struct ssd *ssd, bool force)
     return 0;
 }
 
+static void *gc_thread(void *arg)
+{
+    struct ssd *ssd = (struct ssd *)arg;
+    while (1) {
+        if (should_gc_high(ssd)) {
+            do_gc(ssd, true);
+        }
+    }
+}
+
 static void *ftl_thread(void *arg)
 {
     FemuCtrl *n = (FemuCtrl *)arg;
@@ -981,14 +993,6 @@ uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
     }
     //assert(end_lpn < spp->tt_pgs);
     //printf("Coperd,%s,end_lpn=%"PRIu64" (%d),len=%d\n", __func__, end_lpn, spp->tt_pgs, len);
-
-    while (should_gc_high(ssd)) {
-        /* perform GC here until !should_gc(ssd) */
-        r = do_gc(ssd, true);
-        if (r == -1)
-            break;
-        //break;
-    }
 
     /* on cache eviction, write to NAND page */
 
