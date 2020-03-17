@@ -403,6 +403,9 @@ void ssd_init(FemuCtrl *n)
     /* initialize write pointer, this is how we allocate new pages for writes */
     ssd_init_write_pointer(ssd);
 
+    /* initialize maptbl semaphore */
+    qemu_sem_init(&ssd->maptbl_semaphore, 1);
+
     qemu_thread_create(&ssd->ftl_thread, "ftl_thread", ftl_thread, n, QEMU_THREAD_JOINABLE);
     qemu_thread_create(&ssd->gc_thread, "gc_thread", gc_thread, ssd, QEMU_THREAD_JOINABLE);
 }
@@ -785,6 +788,7 @@ static int do_gc(struct ssd *ssd, bool force)
             ssd->ssdname, ppa.g.blk, victim_line->ipc, ssd->lm.victim_line_cnt,
             ssd->lm.full_line_cnt, ssd->lm.free_line_cnt);
     /* copy back valid data */
+    qemu_sem_wait(&ssd->maptbl_semaphore);
     for (ch = 0; ch < spp->nchs; ch++) {
         for (lun = 0; lun < spp->luns_per_ch; lun++) {
             ppa.g.ch = ch;
@@ -810,6 +814,8 @@ static int do_gc(struct ssd *ssd, bool force)
 
     /* update line status */
     mark_line_free(ssd, &ppa);
+
+    qemu_sem_post(&ssd->maptbl_semaphore);
 
     return 0;
 }
@@ -951,6 +957,7 @@ uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
         return 0;
     } else {
         /* normal IO read path */
+        qemu_sem_wait(&ssd->maptbl_semaphore);
         for (lpn = start_lpn; lpn <= end_lpn; lpn++) {
             ppa = get_maptbl_ent(ssd, lpn);
             if (!mapped_ppa(&ppa) || !valid_ppa(ssd, &ppa)) {
@@ -966,6 +973,7 @@ uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
             sublat = ssd_advance_status(ssd, &ppa, &srd);
             maxlat = (sublat > maxlat) ? sublat : maxlat;
         }
+        qemu_sem_post(&ssd->maptbl_semaphore);
 
         /* this is the latency taken by this read request */
         //req->expire_time = maxlat;
@@ -997,6 +1005,7 @@ uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
     /* on cache eviction, write to NAND page */
 
     // are we doing fresh writes ? maptbl[lpn] == FREE, pick a new page
+    qemu_sem_wait(&ssd->maptbl_semaphore);
     for (lpn = start_lpn; lpn <= end_lpn; lpn++) {
         ppa = get_maptbl_ent(ssd, lpn);
         if (mapped_ppa(&ppa)) {
@@ -1029,6 +1038,7 @@ uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
         curlat = ssd_advance_status(ssd, &ppa, &swr);
         maxlat = (curlat > maxlat) ? curlat : maxlat;
     }
+    qemu_sem_post(&ssd->maptbl_semaphore);
 
     return maxlat;
 }
