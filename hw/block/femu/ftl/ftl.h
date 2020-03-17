@@ -196,6 +196,9 @@ struct ssd {
     struct rte_ring **to_poller;
     bool *dataplane_started_ptr;
     QemuThread ftl_thread;
+    QemuThread gc_thread;
+
+    QemuSemaphore maptbl_semaphore;
 };
 
 

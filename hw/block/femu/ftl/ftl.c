@@ -7,6 +7,7 @@
 
 static void *ftl_thread(void *arg);
 
+static void *gc_thread(void *arg);
 
 static inline bool should_gc(struct ssd *ssd)
 {
@@ -238,19 +239,19 @@ static void check_params(struct ssdparams *spp)
     //assert(is_power_of_2(spp->nchs));
 }
 
-static void ssd_init_params(struct ssdparams *spp)
+static void ssd_init_params(struct ssdparams *spp, FemuCtrl *n)
 {
     spp->secsz = 512;
     spp->secs_per_pg = 8;
     spp->pgs_per_blk = 256;
-    spp->blks_per_pl = 256; /* 16GB */
+    spp->blks_per_pl = n->nand_blocks_per_plane;
     spp->pls_per_lun = 1;
     spp->luns_per_ch = 8;
     spp->nchs = 8;
 
-    spp->pg_rd_lat = NAND_READ_LATENCY;
-    spp->pg_wr_lat = NAND_PROG_LATENCY;
-    spp->blk_er_lat = NAND_ERASE_LATENCY;
+    spp->pg_rd_lat = n->nand_read_lat;
+    spp->pg_wr_lat = n->nand_prog_lat;
+    spp->blk_er_lat = n->nand_erase_lat;
     spp->ch_xfer_lat = 0;
 
     /* calculated values */
@@ -284,8 +285,7 @@ static void ssd_init_params(struct ssdparams *spp)
     spp->gc_thres_lines = (int)((1 - spp->gc_thres_pcent) * spp->tt_lines);
     spp->gc_thres_pcent_high = 0.95;
     spp->gc_thres_lines_high = (int)((1 - spp->gc_thres_pcent_high) * spp->tt_lines);
-    spp->enable_gc_delay = true;
-
+    spp->enable_gc_delay = (n->nand_enable_delay == 1) ? true : false;
 
     check_params(spp);
 }
@@ -383,7 +383,7 @@ void ssd_init(FemuCtrl *n)
 
     assert(ssd);
 
-    ssd_init_params(spp);
+    ssd_init_params(spp, n);
 
     /* initialize ssd internal layout architecture */
     ssd->ch = g_malloc0(sizeof(struct ssd_channel) * spp->nchs);
@@ -403,7 +403,11 @@ void ssd_init(FemuCtrl *n)
     /* initialize write pointer, this is how we allocate new pages for writes */
     ssd_init_write_pointer(ssd);
 
+    /* initialize maptbl semaphore */
+    qemu_sem_init(&ssd->maptbl_semaphore, 1);
+
     qemu_thread_create(&ssd->ftl_thread, "ftl_thread", ftl_thread, n, QEMU_THREAD_JOINABLE);
+    qemu_thread_create(&ssd->gc_thread, "gc_thread", gc_thread, ssd, QEMU_THREAD_JOINABLE);
 }
 
 static inline bool valid_ppa(struct ssd *ssd, struct ppa *ppa)
@@ -784,6 +788,7 @@ static int do_gc(struct ssd *ssd, bool force)
             ssd->ssdname, ppa.g.blk, victim_line->ipc, ssd->lm.victim_line_cnt,
             ssd->lm.full_line_cnt, ssd->lm.free_line_cnt);
     /* copy back valid data */
+    qemu_sem_wait(&ssd->maptbl_semaphore);
     for (ch = 0; ch < spp->nchs; ch++) {
         for (lun = 0; lun < spp->luns_per_ch; lun++) {
             ppa.g.ch = ch;
@@ -810,7 +815,19 @@ static int do_gc(struct ssd *ssd, bool force)
     /* update line status */
     mark_line_free(ssd, &ppa);
 
+    qemu_sem_post(&ssd->maptbl_semaphore);
+
     return 0;
+}
+
+static void *gc_thread(void *arg)
+{
+    struct ssd *ssd = (struct ssd *)arg;
+    while (1) {
+        if (should_gc_high(ssd)) {
+            do_gc(ssd, true);
+        }
+    }
 }
 
 static void *ftl_thread(void *arg)
@@ -859,10 +876,10 @@ static void *ftl_thread(void *arg)
                 printf("FEMU: FTL to_poller enqueue failed\n");
             }
 
-            /* clean one line if needed (in the background) */
-            if (should_gc(ssd)) {
-                do_gc(ssd, false);
-            }
+//            /* clean one line if needed (in the background) */
+//            if (should_gc(ssd)) {
+//                do_gc(ssd, false);
+//            }
         }
     }
 }
@@ -940,6 +957,7 @@ uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
         return 0;
     } else {
         /* normal IO read path */
+        qemu_sem_wait(&ssd->maptbl_semaphore);
         for (lpn = start_lpn; lpn <= end_lpn; lpn++) {
             ppa = get_maptbl_ent(ssd, lpn);
             if (!mapped_ppa(&ppa) || !valid_ppa(ssd, &ppa)) {
@@ -955,6 +973,7 @@ uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
             sublat = ssd_advance_status(ssd, &ppa, &srd);
             maxlat = (sublat > maxlat) ? sublat : maxlat;
         }
+        qemu_sem_post(&ssd->maptbl_semaphore);
 
         /* this is the latency taken by this read request */
         //req->expire_time = maxlat;
@@ -983,17 +1002,10 @@ uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
     //assert(end_lpn < spp->tt_pgs);
     //printf("Coperd,%s,end_lpn=%"PRIu64" (%d),len=%d\n", __func__, end_lpn, spp->tt_pgs, len);
 
-    while (should_gc_high(ssd)) {
-        /* perform GC here until !should_gc(ssd) */
-        r = do_gc(ssd, true);
-        if (r == -1)
-            break;
-        //break;
-    }
-
     /* on cache eviction, write to NAND page */
 
     // are we doing fresh writes ? maptbl[lpn] == FREE, pick a new page
+    qemu_sem_wait(&ssd->maptbl_semaphore);
     for (lpn = start_lpn; lpn <= end_lpn; lpn++) {
         ppa = get_maptbl_ent(ssd, lpn);
         if (mapped_ppa(&ppa)) {
@@ -1026,6 +1038,7 @@ uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
         curlat = ssd_advance_status(ssd, &ppa, &swr);
         maxlat = (curlat > maxlat) ? curlat : maxlat;
     }
+    qemu_sem_post(&ssd->maptbl_semaphore);
 
     return maxlat;
 }
