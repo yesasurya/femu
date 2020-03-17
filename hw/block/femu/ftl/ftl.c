@@ -858,10 +858,10 @@ static void *ftl_thread(void *arg)
                 printf("FEMU: FTL to_poller enqueue failed\n");
             }
 
-            /* clean one line if needed (in the background) */
-            if (should_gc(ssd)) {
-                do_gc(ssd, false);
-            }
+//            /* clean one line if needed (in the background) */
+//            if (should_gc(ssd)) {
+//                do_gc(ssd, false);
+//            }
         }
     }
 }
