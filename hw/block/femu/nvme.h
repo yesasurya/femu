@@ -10,6 +10,7 @@
 #include "include/pqueue.h"
 
 #include "ftl/ftl.h"
+#include "fs/fs.h"
 
 typedef struct NvmeBar {
     uint64_t    cap;
@@ -1204,6 +1205,8 @@ typedef struct FemuCtrl {
 
     uint8_t         multipoller_enabled;
     uint32_t        num_poller;
+
+    struct fs_inode_table   fs_inode_table;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {
