@@ -7,7 +7,6 @@
 
 static void *ftl_thread(void *arg);
 
-
 static inline bool should_gc(struct ssd *ssd)
 {
     return (ssd->lm.free_line_cnt <= ssd->sp.gc_thres_lines);
@@ -373,6 +372,11 @@ static void ssd_init_rmap(struct ssd *ssd)
     for (i = 0; i < spp->tt_pgs; i++) {
         ssd->rmap[i] = INVALID_LPN;
     }
+}
+
+uint64_t fs_test_function() {
+    femu_debug("YESA: THIS IS CALLED");
+    return 1;
 }
 
 void ssd_init(FemuCtrl *n)

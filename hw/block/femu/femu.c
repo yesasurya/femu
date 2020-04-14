@@ -1084,12 +1084,13 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
     n->mbe.femu_mode = n->femu_mode;
     
     // yesa: Currently, inode table is allocated here
-    uint64_t inode_total = fs_get_inode_total(n->mbe.size);
-    n->fs_inode_table.fs_inodes = malloc(inode_total * sizeof(struct fs_inode));
-    if (n->fs_inode_table.fs_inodes == NULL) {
-        femu_debug("Inode table allocation failed.");
-        abort();
-    }
+    uint64_t ret_test = fs_test_function();
+//    uint64_t inode_total = fs_get_inode_total(n->mbe.size);
+//    n->fs_inode_table.fs_inodes = malloc(inode_total * sizeof(struct fs_inode));
+//    if (n->fs_inode_table.fs_inodes == NULL) {
+//        femu_debug("Inode table allocation failed.");
+//        abort();
+//    }
 
     n->completed = 0;
     n->start_time = time(NULL);
