@@ -364,19 +364,13 @@ static void ssd_init_maptbl(struct ssd *ssd)
     }
 }
 
-static void ssd_init_rmap(struct ssd *ssd)
-{
+static void ssd_init_rmap(struct ssd *ssd) {
     int i;
     struct ssdparams *spp = &ssd->sp;
     ssd->rmap = g_malloc0(sizeof(uint64_t) * spp->tt_pgs);
     for (i = 0; i < spp->tt_pgs; i++) {
         ssd->rmap[i] = INVALID_LPN;
     }
-}
-
-uint64_t fs_test_function() {
-    femu_debug("YESA: THIS IS CALLED");
-    return 1;
 }
 
 void ssd_init(FemuCtrl *n)
