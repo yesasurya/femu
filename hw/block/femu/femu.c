@@ -9,8 +9,6 @@
 #include <immintrin.h>
 #include "nvme.h"
 
-extern uint64_t fs_get_inode_total(uint64_t mem_size_bytes);
-
 static void nvme_post_cqe(NvmeCQueue *cq, NvmeRequest *req)
 {
     FemuCtrl *n = cq->ctrl;

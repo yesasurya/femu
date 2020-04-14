@@ -1244,6 +1244,8 @@ extern void ssd_init(FemuCtrl *n);
 extern uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req);
 extern uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req);
 
+// fs
+extern uint64_t fs_get_inode_total(uint64_t mem_size_bytes);
 
 void femu_oc12_exit(FemuCtrl *n);
 int femu_oc12_init(FemuCtrl *n);
