@@ -1090,7 +1090,7 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
         femu_debug("Inode table allocation failed.");
         abort();
     } else {
-        printf("YESA LOG: n->mbe.size = %" PRIu64 ", inode_total = %" PRIu64 "\n");
+        printf("YESA LOG: n->mbe.size = %" PRIu64 ", inode_total = %" PRIu64 "\n", n->mbe.size, inode_total);
     }
 
     n->completed = 0;
