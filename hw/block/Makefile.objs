@@ -13,6 +13,7 @@ obj-$(CONFIG_FEMU_PCI) += femu/nvme-util.o
 obj-$(CONFIG_FEMU_PCI) += femu/nvme-core.o
 obj-$(CONFIG_FEMU_PCI) += femu/femu.o
 obj-$(CONFIG_FEMU_PCI) += femu/ocssd/
+obj-$(CONFIG_FEMU_PCI) += femu/fs/
 obj-$(CONFIG_FEMU_PCI) += femu/ftl/
 obj-$(CONFIG_FEMU_PCI) += femu/lib/
 obj-$(CONFIG_FEMU_PCI) += femu/mem-backend.o
