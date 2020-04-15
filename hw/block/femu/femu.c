@@ -270,17 +270,26 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     /* Processing prp1 */
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-    /* Processing prp2 and its list if exist */
-    if (iteration == 2) {
-        buf += len;
-        address_space_rw(&address_space_memory, prp2, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-    } else if (iteration > 2) {
-        uint64_t prp_list[n->max_prp_ents];
-        femu_nvme_addr_read(n, prp2, (void *)prp_list, (iteration - 1) * sizeof(uint64_t));
-        for (int i = 0; i < iteration - 1; i++) {
+
+    printf("YESA: Checking FS\n");
+    if (slba == 0x0) {
+        printf("YESA: Entering FS mode...\n");
+        char *filename = malloc(sizeof(char) * 128);
+        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+        printf("YESA: filename = %s\n", filename);
+    } else {
+        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+        /* Processing prp2 and its list if exist */
+        if (iteration == 2) {
             buf += len;
-            address_space_rw(&address_space_memory, prp_list[0], MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+            address_space_rw(&address_space_memory, prp2, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+        } else if (iteration > 2) {
+            uint64_t prp_list[n->max_prp_ents];
+            femu_nvme_addr_read(n, prp2, (void *)prp_list, (iteration - 1) * sizeof(uint64_t));
+            for (int i = 0; i < iteration - 1; i++) {
+                buf += len;
+                address_space_rw(&address_space_memory, prp_list[0], MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+            }
         }
     }
 
@@ -1085,7 +1094,7 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
     
     // yesa: Currently, inode table is allocated here
     uint64_t inode_total = fs_get_inode_total(n->mbe.size);
-    n->fs_inode_table.fs_inodes = malloc(inode_total * sizeof(struct fs_inode));
+    n->inode_table.inodes = malloc(inode_total * sizeof(struct fs_inode));
     if (n->fs_inode_table.fs_inodes == NULL) {
         femu_debug("Inode table allocation failed.");
         abort();
