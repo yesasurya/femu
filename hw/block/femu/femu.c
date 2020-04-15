@@ -1095,7 +1095,7 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
     // yesa: Currently, inode table is allocated here
     uint64_t inode_total = fs_get_inode_total(n->mbe.size);
     n->inode_table.inodes = malloc(inode_total * sizeof(struct fs_inode));
-    if (n->fs_inode_table.fs_inodes == NULL) {
+    if (n->inode_table.inodes == NULL) {
         femu_debug("Inode table allocation failed.");
         abort();
     } else {
