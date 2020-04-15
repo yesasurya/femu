@@ -265,31 +265,31 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     uint64_t data_size = (uint64_t)nlb << data_shift;
     uint64_t data_offset = slba << data_shift;
 
+    if (rw->opcode == NVME_CMD_FS_OPEN) {
+        printf("YESA: NVME_CMD_FS_OPEN\n");
+        char *filename = malloc(sizeof(char) * 4096);
+        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, read);
+        printf("YESA: filename = %s\n", filename);
+        return NVME_SUCCESS;
+    }
+
     hwaddr len = n->page_size;
     uint64_t iteration = data_size / len;
     /* Processing prp1 */
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
 
-    printf("YESA: Checking FS\n");
-    if (slba == 0x0) {
-        printf("YESA: Entering FS mode...\n");
-        char *filename = malloc(sizeof(char) * 128);
-        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-        printf("YESA: filename = %s\n", filename);
-    } else {
-        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-        /* Processing prp2 and its list if exist */
-        if (iteration == 2) {
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+    /* Processing prp2 and its list if exist */
+    if (iteration == 2) {
+        buf += len;
+        address_space_rw(&address_space_memory, prp2, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+    } else if (iteration > 2) {
+        uint64_t prp_list[n->max_prp_ents];
+        femu_nvme_addr_read(n, prp2, (void *)prp_list, (iteration - 1) * sizeof(uint64_t));
+        for (int i = 0; i < iteration - 1; i++) {
             buf += len;
-            address_space_rw(&address_space_memory, prp2, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-        } else if (iteration > 2) {
-            uint64_t prp_list[n->max_prp_ents];
-            femu_nvme_addr_read(n, prp2, (void *)prp_list, (iteration - 1) * sizeof(uint64_t));
-            for (int i = 0; i < iteration - 1; i++) {
-                buf += len;
-                address_space_rw(&address_space_memory, prp_list[0], MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-            }
+            address_space_rw(&address_space_memory, prp_list[0], MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
         }
     }
 
@@ -395,53 +395,54 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
     ns = &n->namespaces[nsid - 1];
 
     switch (cmd->opcode) {
-    case NVME_CMD_READ:
-    case NVME_CMD_WRITE:
-        if (n->femu_mode == FEMU_BLACKBOX_MODE)
-            return nvme_rw(n, ns, cmd, req);
-        else
-            return femu_rw_mem_backend_nossd(n, ns, cmd);
+        case NVME_CMD_FS_OPEN:
+        case NVME_CMD_READ:
+        case NVME_CMD_WRITE:
+            if (n->femu_mode == FEMU_BLACKBOX_MODE)
+                return nvme_rw(n, ns, cmd, req);
+            else
+                return femu_rw_mem_backend_nossd(n, ns, cmd);
 
-    case NVME_CMD_FLUSH:
-        if (!n->id_ctrl.vwc || !n->features.volatile_wc) {
-            return NVME_SUCCESS;
+        case NVME_CMD_FLUSH:
+            if (!n->id_ctrl.vwc || !n->features.volatile_wc) {
+                return NVME_SUCCESS;
+            }
+            return nvme_flush(n, ns, cmd, req);
+
+        case NVME_CMD_DSM:
+            if (NVME_ONCS_DSM & n->oncs) {
+                return nvme_dsm(n, ns, cmd, req);
+            }
+            return NVME_INVALID_OPCODE | NVME_DNR;
+
+        case NVME_CMD_COMPARE:
+            if (NVME_ONCS_COMPARE & n->oncs) {
+                return nvme_compare(n, ns, cmd, req);
+            }
+            return NVME_INVALID_OPCODE | NVME_DNR;
+
+        case NVME_CMD_WRITE_ZEROS:
+            if (NVME_ONCS_WRITE_ZEROS & n->oncs) {
+                return nvme_write_zeros(n, ns, cmd, req);
+            }
+            return NVME_INVALID_OPCODE | NVME_DNR;
+
+        case NVME_CMD_WRITE_UNCOR:
+            if (NVME_ONCS_WRITE_UNCORR & n->oncs) {
+                return nvme_write_uncor(n, ns, cmd, req);
+            }
+            return NVME_INVALID_OPCODE | NVME_DNR;
+
+        /* Coperd: FEMU OC command handling */
+        case FEMU_OC12_CMD_PHYS_READ:
+        case FEMU_OC12_CMD_PHYS_WRITE:
+            return femu_oc12_rw(n, ns, cmd, req);
+        case FEMU_OC12_CMD_ERASE_ASYNC:
+            return femu_oc12_erase_async(n, ns, cmd, req);
+
+        default:
+            return NVME_INVALID_OPCODE | NVME_DNR;
         }
-        return nvme_flush(n, ns, cmd, req);
-
-    case NVME_CMD_DSM:
-        if (NVME_ONCS_DSM & n->oncs) {
-            return nvme_dsm(n, ns, cmd, req);
-        }
-        return NVME_INVALID_OPCODE | NVME_DNR;
-
-    case NVME_CMD_COMPARE:
-        if (NVME_ONCS_COMPARE & n->oncs) {
-            return nvme_compare(n, ns, cmd, req);
-        }
-        return NVME_INVALID_OPCODE | NVME_DNR;
-
-    case NVME_CMD_WRITE_ZEROS:
-        if (NVME_ONCS_WRITE_ZEROS & n->oncs) {
-            return nvme_write_zeros(n, ns, cmd, req);
-        }
-        return NVME_INVALID_OPCODE | NVME_DNR;
-
-    case NVME_CMD_WRITE_UNCOR:
-        if (NVME_ONCS_WRITE_UNCORR & n->oncs) {
-            return nvme_write_uncor(n, ns, cmd, req);
-        }
-        return NVME_INVALID_OPCODE | NVME_DNR;
-
-    /* Coperd: FEMU OC command handling */
-    case FEMU_OC12_CMD_PHYS_READ:
-    case FEMU_OC12_CMD_PHYS_WRITE:
-        return femu_oc12_rw(n, ns, cmd, req);
-    case FEMU_OC12_CMD_ERASE_ASYNC:
-        return femu_oc12_erase_async(n, ns, cmd, req);
-
-    default:
-        return NVME_INVALID_OPCODE | NVME_DNR;
-    }
 }
 
 static void nvme_update_sq_eventidx(const NvmeSQueue *sq)
