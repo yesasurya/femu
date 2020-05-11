@@ -286,6 +286,19 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
 
         int fd = fs_open_file(n->inode_table, filename);
         memcpy(n->mbe.mem_backend + (SLBA_FD * 0x200), &fd, sizeof(fd));
+
+        return NVME_SUCCESS;
+    }
+
+    if (slba == SLBA_DATA) {
+        int fd = *(int *)(n->mbe.mem_backend + (SLBA_FD * 0x200));
+        int len = *(int *)(n->mbe.mem_backend + (SLBA_DATA_LEN * 0x200));
+
+        struct fs_inode inode = fs_get_inode_of_fd(n->inode_table, fd);
+        uint64_t address = inode.address;
+        memcpy(n->mbe.mem_backend + address, n->mbe.mem_backend + (SLBA_DATA * 0x200), 4096);
+
+        return NVME_SUCCESS;
     }
 
     /* Processing prp2 and its list if exist */

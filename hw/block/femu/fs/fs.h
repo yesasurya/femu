@@ -5,7 +5,9 @@
 
 #define SLBA_FILENAME 0x1
 #define SLBA_FD 0x2
-#define SLBA_DATA 0x3
+#define SLBA_DATA_LEN 0x3
+#define SLBA_DATA 0x4
+#define SLBA_FS_START 0xf;
 
 enum fs_inode_type {
     FS_INODE_FILE = 0
