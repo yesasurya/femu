@@ -271,6 +271,15 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
 
+    if (slba == SLBA_DATA && rw->opcode == NVME_CMD_READ) {
+        int fd = *(int *)(n->mbe.mem_backend + (SLBA_FD * 0x200));
+        int len = *(int *)(n->mbe.mem_backend + (SLBA_DATA_LEN * 0x200));
+
+        struct fs_inode inode = fs_get_inode_of_fd(n->inode_table, fd);
+        uint64_t address = inode.address;
+        memcpy(n->mbe.mem_backend + (SLBA_DATA * 0x200), n->mbe.mem_backend + address, 4096);
+    }
+
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
 
     if (slba == SLBA_FILENAME) {
@@ -290,7 +299,7 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
         return NVME_SUCCESS;
     }
 
-    if (slba == SLBA_DATA) {
+    if (slba == SLBA_DATA && rw->opcode == NVME_CMD_WRITE) {
         int fd = *(int *)(n->mbe.mem_backend + (SLBA_FD * 0x200));
         int len = *(int *)(n->mbe.mem_backend + (SLBA_DATA_LEN * 0x200));
 
