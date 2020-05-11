@@ -281,7 +281,8 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
 
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
     if (rw->opcode == NVME_CMD_WRITE && slba == 0x1) {
-        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf + (0x200 * 0x2), len, is_write);
+        memcpy(n->mbe.mem_backend + (0x200 * 0x2), "hehehe.txt", 10);
+        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + (0x200 * 0x2), len, !is_write);
     }
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
