@@ -265,14 +265,6 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     uint64_t data_size = (uint64_t)nlb << data_shift;
     uint64_t data_offset = slba << data_shift;
 
-//    if (rw->opcode == NVME_CMD_FS_OPEN) {
-//        printf("YESA: NVME_CMD_FS_OPEN\n");
-//        char *filename = malloc(sizeof(char) * 4096);
-//        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, 4096, false);
-//        printf("YESA: filename = %s\n", filename);
-//        return NVME_SUCCESS;
-//    }
-
     hwaddr len = n->page_size;
     uint64_t iteration = data_size / len;
     /* Processing prp1 */
@@ -280,10 +272,20 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
 
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-    if (rw->opcode == NVME_CMD_WRITE && slba == 0x1) {
-        memcpy(n->mbe.mem_backend + (0x200 * 0x2), "hehehe.txt", 10);
-        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + (0x200 * 0x2), len, !is_write);
+
+    if (slba == SLBA_FILENAME) {
+        int filename_length = 0;
+        void *filename_start_address = (void *)(n->mbe.mem_backend + (SLBA_FILENAME * 0x200));
+        char c = *(char *)(filename_start_address + filename_length);
+        while (c != '\0') {
+            filename_length++;
+            c = *(char *)(filename_start_address + filename_length);
+        }
+        char *filename = malloc(sizeof(char) * filename_length);
+        memcpy(filename, filename_start_address, filename_length);
+        printf("YESA LOG: filename = %s\n", filename);
     }
+    
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
         buf += len;

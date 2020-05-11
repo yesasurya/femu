@@ -3,6 +3,9 @@
 
 #include "qemu/osdep.h"
 
+#define SLBA_FILENAME 0x1
+#define SLBA_FD 0x2
+
 enum fs_inode_type {
     FS_INODE_FILE = 0,
     FS_INODE_DIR = 1,
