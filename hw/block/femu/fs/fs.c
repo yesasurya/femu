@@ -8,6 +8,8 @@ uint64_t fs_get_inode_total(struct fs_inode_table *inode_table, uint64_t mem_siz
 uint64_t fs_get_fd_of_file(struct fs_inode_table *inode_table, char *filename) {
     for (int i = 1; i <= inode_table->num_entries; i++) {
         struct fs_inode inode = inode_table->inodes[i];
+        printf("YESA LOG: filename = %s\n", filename);
+        printf("YESA LOG: inode.filename = %s\n", inode.filename);
         if (strcmp(filename, inode.filename) == 0) {
             return inode.number;
         }
