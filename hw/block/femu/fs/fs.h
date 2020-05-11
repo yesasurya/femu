@@ -5,14 +5,15 @@
 
 #define SLBA_FILENAME 0x1
 #define SLBA_FD 0x2
+#define SLBA_DATA 0x3
 
 enum fs_inode_type {
-    FS_INODE_FILE = 0,
-    FS_INODE_DIR = 1,
+    FS_INODE_FILE = 0
 };
 
 struct fs_inode {
     enum fs_inode_type type;
+    char *filename;
     uint64_t number;
     uint64_t address;
     size_t length;

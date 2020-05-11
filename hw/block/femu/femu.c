@@ -283,9 +283,11 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
         }
         char *filename = malloc(sizeof(char) * filename_length);
         memcpy(filename, filename_start_address, filename_length);
-        printf("YESA LOG: filename = %s\n", filename);
+
+        uint64_t fd = fs_open_file(n->inode_table, filename);
+        printf("YESA LOG: fd = %" PRId64 "\n", fd);
     }
-    
+
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
         buf += len;
@@ -1104,7 +1106,7 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
     uint64_t inode_total = fs_get_inode_total(n->inode_table, n->mbe.size);
     n->inode_table->max_entries = inode_total;
     n->inode_table->num_entries = 0;
-    n->inode_table->inodes = malloc(inode_total * sizeof(struct fs_inode));
+    n->inode_table->inodes = malloc((inode_total + 1) * sizeof(struct fs_inode));
     if (n->inode_table->inodes == NULL) {
         femu_debug("Inode table allocation failed.");
         abort();
