@@ -274,7 +274,6 @@ enum NvmeIoCommands {
     NVME_CMD_COMPARE            = 0x05,
     NVME_CMD_WRITE_ZEROS        = 0x08,
     NVME_CMD_DSM                = 0x09,
-    NVME_CMD_FS_OPEN            = 0xff,
 };
 
 typedef struct NvmeDeleteQ {
