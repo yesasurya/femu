@@ -279,10 +279,10 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
 
-    printf("YESA LOG: n->mbe.mem_backend = %p\n", n->mbe.mem_backend);
-    printf("YESA LOG: data_offset = %p\n", data_offset);
-    printf("YESA LOG: buf = %p\n", buf);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+    if (rw->opcode == NVME_CMD_WRITE && slba == 0x1) {
+        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf + (0x200 * 0x2), len, is_write);
+    }
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
         buf += len;
