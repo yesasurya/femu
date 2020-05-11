@@ -265,22 +265,6 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     uint64_t data_size = (uint64_t)nlb << data_shift;
     uint64_t data_offset = slba << data_shift;
 
-    if (slba == 0x0) {
-        printf("YESA LOG: 0x0 USED\n");
-    }
-    if (slba == 0x1) {
-        printf("YESA LOG: 0x1 USED\n");
-    }
-    if (slba == 0x2) {
-        printf("YESA LOG: 0x2 USED\n");
-    }
-    if (slba == 0x3) {
-        printf("YESA LOG: 0x3 USED\n");
-    }
-    if (slba == 0x4) {
-        printf("YESA LOG: 0x4 USED\n");
-    }
-
 //    if (rw->opcode == NVME_CMD_FS_OPEN) {
 //        printf("YESA: NVME_CMD_FS_OPEN\n");
 //        char *filename = malloc(sizeof(char) * 4096);
@@ -307,6 +291,10 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
             buf += len;
             address_space_rw(&address_space_memory, prp_list[0], MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
         }
+    }
+
+    if (slba == 0x1) {
+        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, "hehehe.txt", len, !is_write);
     }
 
     return NVME_SUCCESS;
