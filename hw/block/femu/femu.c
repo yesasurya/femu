@@ -284,8 +284,8 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
         char *filename = malloc(sizeof(char) * filename_length);
         memcpy(filename, filename_start_address, filename_length);
 
-        uint64_t fd = fs_open_file(n->inode_table, filename);
-        printf("YESA LOG: fd = %" PRId64 "\n", fd);
+        int fd = fs_open_file(n->inode_table, filename);
+        memcpy(n->mbe.mem_backend + (SLBA_FD * 0x200), &fd, sizeof(fd));
     }
 
     /* Processing prp2 and its list if exist */
