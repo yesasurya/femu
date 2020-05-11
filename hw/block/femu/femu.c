@@ -265,8 +265,20 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     uint64_t data_size = (uint64_t)nlb << data_shift;
     uint64_t data_offset = slba << data_shift;
 
-    if (rw->opcode == NVME_CMD_FS_OPEN) {
-        printf("YESA LOG: Opening file...\n");
+    if (slba == 0x0) {
+        printf("YESA LOG: 0x0 USED\n");
+    }
+    if (slba == 0x1) {
+        printf("YESA LOG: 0x1 USED\n");
+    }
+    if (slba == 0x2) {
+        printf("YESA LOG: 0x2 USED\n");
+    }
+    if (slba == 0x3) {
+        printf("YESA LOG: 0x3 USED\n");
+    }
+    if (slba == 0x4) {
+        printf("YESA LOG: 0x4 USED\n");
     }
 
 //    if (rw->opcode == NVME_CMD_FS_OPEN) {
@@ -399,7 +411,6 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
     ns = &n->namespaces[nsid - 1];
 
     switch (cmd->opcode) {
-        case NVME_CMD_FS_OPEN:
         case NVME_CMD_READ:
         case NVME_CMD_WRITE:
             if (n->femu_mode == FEMU_BLACKBOX_MODE)
