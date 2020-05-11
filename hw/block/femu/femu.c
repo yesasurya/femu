@@ -297,6 +297,7 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
         printf("YESA LOG: Getting here...\n");
         memcpy(n->mbe.mem_backend, "hehe.txt", 8);
         address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend, 4096, !is_write);
+        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + 4096, 4096, is_write);
     }
 
     return NVME_SUCCESS;
