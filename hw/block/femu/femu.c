@@ -441,8 +441,8 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
         case FEMU_OC12_CMD_PHYS_READ:
         case FEMU_OC12_CMD_PHYS_WRITE:
             return femu_oc12_rw(n, ns, cmd, req);
-        case FEMU_OC12_CMD_ERASE_ASYNC:
-            return femu_oc12_erase_async(n, ns, cmd, req);
+//        case FEMU_OC12_CMD_ERASE_ASYNC:
+//            return femu_oc12_erase_async(n, ns, cmd, req);
 
         default:
             return NVME_INVALID_OPCODE | NVME_DNR;
