@@ -12,7 +12,6 @@ struct fs_inode fs_get_inode_of_fd(struct fs_inode_table *inode_table, int fd) {
             return inode;
         }
     }
-    return NULL;
 }
 
 uint64_t fs_get_fd_of_file(struct fs_inode_table *inode_table, char *filename) {
