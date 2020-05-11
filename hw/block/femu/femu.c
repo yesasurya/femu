@@ -395,7 +395,6 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
     ns = &n->namespaces[nsid - 1];
 
     switch (cmd->opcode) {
-        case NVME_CMD_FS_OPEN:
         case NVME_CMD_READ:
         case NVME_CMD_WRITE:
             if (n->femu_mode == FEMU_BLACKBOX_MODE)
