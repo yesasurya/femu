@@ -1093,7 +1093,8 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
     femu_init_mem_backend(&n->mbe, bs_size);
     n->mbe.femu_mode = n->femu_mode;
     
-    // yesa:    Currently, inode table is allocated here
+    // yesa:    Currently, inode table is allocated here. Max file size will be set to 128MB
+    n->inode_table.max_file_size = 131072;
     uint64_t inode_total = fs_get_inode_total(n->inode_table, n->mbe.size);
     n->inode_table.max_entries = inode_total;
     n->inode_table.num_entries = 0;

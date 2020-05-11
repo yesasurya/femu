@@ -16,10 +16,9 @@ struct fs_inode {
     struct fs_inode* inodes;
 };
 
-// yesa:    At the moment, just make fixed allocation, max_file_size is 128MB
-//          max_entries = size of SSD / max_file_size
+// yesa:    max_entries = size of SSD / max_file_size
 struct fs_inode_table {
-    uint64_t max_file_size: 131072;
+    uint64_t max_file_size;
     uint64_t max_entries;
     uint64_t num_entries;
     struct fs_inode* inodes;
