@@ -265,13 +265,13 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     uint64_t data_size = (uint64_t)nlb << data_shift;
     uint64_t data_offset = slba << data_shift;
 
-    if (rw->opcode == NVME_CMD_FS_OPEN) {
-        printf("YESA: NVME_CMD_FS_OPEN\n");
-        char *filename = malloc(sizeof(char) * 4096);
-        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, 4096, false);
-        printf("YESA: filename = %s\n", filename);
-        return NVME_SUCCESS;
-    }
+//    if (rw->opcode == NVME_CMD_FS_OPEN) {
+//        printf("YESA: NVME_CMD_FS_OPEN\n");
+//        char *filename = malloc(sizeof(char) * 4096);
+//        address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, 4096, false);
+//        printf("YESA: filename = %s\n", filename);
+//        return NVME_SUCCESS;
+//    }
 
     hwaddr len = n->page_size;
     uint64_t iteration = data_size / len;
