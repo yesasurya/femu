@@ -1206,7 +1206,7 @@ typedef struct FemuCtrl {
     uint8_t         multipoller_enabled;
     uint32_t        num_poller;
 
-    struct fs_inode_table   inode_table;
+    struct fs_inode_table   *inode_table;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {
