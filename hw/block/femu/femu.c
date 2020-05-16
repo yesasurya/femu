@@ -375,17 +375,17 @@ static uint16_t nvme_rw(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd,
 }
 
 static uint16_t nvme_fs_open() {
-    printf("YESA LOG: nvme_fs_open");
+    printf("YESA LOG: nvme_fs_open\n");
     return NVME_SUCCESS;
 }
 
 static uint16_t nvme_fs_read() {
-    printf("YESA LOG: nvme_fs_read");
+    printf("YESA LOG: nvme_fs_read\n");
     return NVME_SUCCESS;
 }
 
 static uint16_t nvme_fs_write() {
-    printf("YESA LOG: nvme_fs_write");
+    printf("YESA LOG: nvme_fs_write\n");
     return NVME_SUCCESS;
 }
 
@@ -452,7 +452,7 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
         return nvme_fs_read();
     case NVME_CMD_FS_WRITE:
         return nvme_fs_write();
-            
+
 
     default:
         return NVME_INVALID_OPCODE | NVME_DNR;
@@ -507,9 +507,11 @@ void nvme_process_sq_io(void *opaque, int index_poller)
     nvme_update_sq_tail(sq);
     while (!(nvme_sq_empty(sq))) {
         if (sq->phys_contig) {
+            printf("YESA LOG: HAHA\n");
             addr = sq->dma_addr + sq->head * n->sqe_size;
             nvme_copy_cmd(&cmd, (void *)&(((NvmeCmd *)sq->dma_addr_hva)[sq->head]));
         } else {
+            printf("YESA LOG: HEHE\n");
             addr = nvme_discontig(sq->prp_list, sq->head, n->page_size,
                     n->sqe_size);
             femu_nvme_addr_read(n, addr, (void *)&cmd, sizeof(cmd));
