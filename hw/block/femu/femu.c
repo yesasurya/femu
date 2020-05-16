@@ -379,6 +379,16 @@ static uint16_t nvme_fs_open() {
     return NVME_SUCCESS;
 }
 
+static uint16_t nvme_fs_read() {
+    printf("YESA LOG: nvme_fs_read");
+    return NVME_SUCCESS;
+}
+
+static uint16_t nvme_fs_write() {
+    printf("YESA LOG: nvme_fs_write");
+    return NVME_SUCCESS;
+}
+
 static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
 {
     NvmeNamespace *ns;
@@ -438,6 +448,11 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
     /* yesa: Handling NVMe FS commands */
     case NVME_CMD_FS_OPEN:
         return nvme_fs_open();
+    case NVME_CMD_FS_READ:
+        return nvme_fs_read();
+    case NVME_CMD_FS_WRITE:
+        return nvme_fs_write();
+            
 
     default:
         return NVME_INVALID_OPCODE | NVME_DNR;
