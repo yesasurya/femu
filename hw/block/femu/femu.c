@@ -475,12 +475,14 @@ static void nvme_update_sq_eventidx(const NvmeSQueue *sq)
 static inline void nvme_copy_cmd(NvmeCmd *dst, NvmeCmd *src)
 {
 #if defined(__AVX__)
+    printf("YESA LOG: HAHAHA\n");
     __m256i *d256 = (__m256i *)dst;
     const __m256i *s256 = (const __m256i *)src;
 
     _mm256_store_si256(&d256[0], _mm256_load_si256(&s256[0]));
     _mm256_store_si256(&d256[1], _mm256_load_si256(&s256[1]));
 #elif defined(__SSE2__)
+    printf("YESA LOG: HIHIHI\n");
     __m128i *d128 = (__m128i *)dst;
     const __m128i *s128 = (const __m128i *)src;
 
@@ -489,6 +491,7 @@ static inline void nvme_copy_cmd(NvmeCmd *dst, NvmeCmd *src)
     _mm_store_si128(&d128[2], _mm_load_si128(&s128[2]));
     _mm_store_si128(&d128[3], _mm_load_si128(&s128[3]));
 #else
+    printf("YESA LOG: HUHUHU\n");
     *dst = *src;
 #endif
 }
@@ -507,11 +510,9 @@ void nvme_process_sq_io(void *opaque, int index_poller)
     nvme_update_sq_tail(sq);
     while (!(nvme_sq_empty(sq))) {
         if (sq->phys_contig) {
-            printf("YESA LOG: HAHA\n");
             addr = sq->dma_addr + sq->head * n->sqe_size;
             nvme_copy_cmd(&cmd, (void *)&(((NvmeCmd *)sq->dma_addr_hva)[sq->head]));
         } else {
-            printf("YESA LOG: HEHE\n");
             addr = nvme_discontig(sq->prp_list, sq->head, n->page_size,
                     n->sqe_size);
             femu_nvme_addr_read(n, addr, (void *)&cmd, sizeof(cmd));
