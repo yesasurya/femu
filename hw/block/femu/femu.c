@@ -396,6 +396,22 @@ static uint16_t nvme_fs_open(NvmeCmd *cmd, NvmeRequest *req) {
     if (rw->dsmgmt) {
         printf("YESA LOG: rw->dsmgmt = %" PRIu32 "\n", rw->dsmgmt);
     }
+    NvmeCqe *cqe = &req->cqe;
+    if (cqe->n.result) {
+        printf("YESA LOG: cqe->n.result = %" PRIu32 "\n", cqe->n.result);
+    }
+    if (cqe->n.rsvd) {
+        printf("YESA LOG: cqe->n.rsvd = %" PRIu32 "\n", cqe->n.rsvd);
+    }
+    if (cqe->sq_head) {
+        printf("YESA LOG: cqe->sq_head = %" PRIu16 "\n", cqe->sq_head);
+    }
+    if (cqe->sq_id) {
+        printf("YESA LOG: cqe->sq_id = %" PRIu16 "\n", cqe->sq_id);
+    }
+    if (cqe->cid) {
+        printf("YESA LOG: cqe->cid = %" PRIu16 "\n", cqe->cid);
+    }
     req->cqe.n.result = 66;
     return NVME_SUCCESS;
 }
