@@ -374,30 +374,33 @@ static uint16_t nvme_rw(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd,
     return NVME_DNR;
 }
 
-static uint16_t nvme_fs_open(NvmeCmd *cmd) {
+static uint16_t nvme_fs_open(NvmeCmd *cmd, NvmeRequest *req) {
     printf("YESA LOG: nvme_fs_open\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
     if (rw->dsmgmt) {
         printf("YESA LOG: rw->dsmgmt = %" PRIu32 "\n", rw->dsmgmt);
     }
+    req->cqe.n.result = 66;
     return NVME_SUCCESS;
 }
 
-static uint16_t nvme_fs_read(NvmeCmd *cmd) {
+static uint16_t nvme_fs_read(NvmeCmd *cmd, NvmeRequest *req) {
     printf("YESA LOG: nvme_fs_read\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
     if (rw->dsmgmt) {
         printf("YESA LOG: rw->dsmgmt = %" PRIu32 "\n", rw->dsmgmt);
     }
+    req->cqe.n.result = 77;
     return NVME_SUCCESS;
 }
 
-static uint16_t nvme_fs_write(NvmeCmd *cmd) {
+static uint16_t nvme_fs_write(NvmeCmd *cmd, NvmeRequest *req) {
     printf("YESA LOG: nvme_fs_write\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
     if (rw->dsmgmt) {
         printf("YESA LOG: rw->dsmgmt = %" PRIu32 "\n", rw->dsmgmt);
     }
+    req->cqe.n.result = 88;
     return NVME_SUCCESS;
 }
 
@@ -459,11 +462,11 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
 
     /* yesa: Handling NVMe FS commands */
     case NVME_CMD_FS_OPEN:
-        return nvme_fs_open(cmd);
+        return nvme_fs_open(cmd, req);
     case NVME_CMD_FS_READ:
-        return nvme_fs_read(cmd);
+        return nvme_fs_read(cmd, req);
     case NVME_CMD_FS_WRITE:
-        return nvme_fs_write(cmd);
+        return nvme_fs_write(cmd, req);
 
     default:
         return NVME_INVALID_OPCODE | NVME_DNR;
