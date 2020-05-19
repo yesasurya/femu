@@ -65,6 +65,7 @@ uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
     if (fd != FS_FILENAME_NOT_FOUND)
         return fd;
 
+    printf("YESA LOG: Creating new file...\n");
     uint64_t unused_inode_index = fs_get_unused_inode_index(inode_table);
     if (unused_inode_index == FS_NO_INODE_AVAILABLE) {
         printf("YESA LOG: No inode available\n");
