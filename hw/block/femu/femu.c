@@ -271,6 +271,7 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+    printf("YESA LOG: buf = %s\n", buf);
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
         buf += len;
@@ -390,7 +391,6 @@ static uint16_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     void *filename = malloc(len);
     bool is_write = (fs->opcode == NVME_CMD_WRITE) ? false : true;
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, is_write);
-    printf("opening filename = %s\n", filename);
 
     return NVME_SUCCESS;
 }
