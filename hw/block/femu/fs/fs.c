@@ -15,17 +15,8 @@ struct fs_inode *fs_get_inode_of_fd(struct fs_inode_table *inode_table, int fd) 
 }
 
 uint64_t fs_get_fd_of_file(struct fs_inode_table *inode_table, char *filename) {
-    printf("YESA LOG: inode_table->max_entries = %" PRIu64 "\n", inode_table->max_entries);
     for (int i = 1; i <= inode_table->max_entries; i++) {
-        printf("Iteration %d\n", i);
         struct fs_inode *inode = &inode_table->inodes[i];
-        if (inode->is_used) {
-            printf("YESA LOG: inode is used\n");
-        } else {
-            printf("YESA LOG: inode is not used\n");
-        }
-        printf("filename = %s\n", filename);
-        printf("inode->filename = %s\n", inode->filename);
         if (inode->is_used && strcmp(filename, inode->filename) == 0) {
             return inode->number;
         }
