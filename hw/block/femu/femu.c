@@ -388,7 +388,7 @@ static uint16_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
 
     /* Processing prp1 */
     void *filename = malloc(len);
-    bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
+    bool is_write = (fs->opcode == NVME_CMD_WRITE) ? false : true;
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, is_write);
     printf("opening filename = %s\n", filename);
 
