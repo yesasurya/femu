@@ -391,6 +391,7 @@ static uint16_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     void *filename = malloc(len);
     bool is_write = (fs->opcode == NVME_CMD_WRITE) ? false : true;
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, is_write);
+    printf("YESA LOG: filename = %s\n", filename);
 
     return NVME_SUCCESS;
 }
