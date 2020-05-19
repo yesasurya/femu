@@ -361,6 +361,25 @@ typedef struct NvmeRwCmd {
     uint16_t    appmask;
 } NvmeRwCmd;
 
+/* yesa */
+typedef struct NvmeFsCmd {
+    uint8_t     opcode;
+    uint8_t     flags;
+    uint16_t    cid;
+    uint32_t    nsid;
+    uint64_t    rsvd2;
+    uint64_t    mptr;
+    uint64_t    prp1;
+    uint64_t    prp2;
+    uint64_t    slba;
+    uint16_t    nlb;
+    uint16_t    control;
+    uint32_t    fd;
+    uint32_t    reftag;
+    uint16_t    apptag;
+    uint16_t    appmask;
+} NvmeFsCmd;
+
 enum {
     NVME_RW_LR                  = 1 << 15,
     NVME_RW_FUA                 = 1 << 14,

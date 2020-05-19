@@ -374,23 +374,43 @@ static uint16_t nvme_rw(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd,
     return NVME_DNR;
 }
 
-static uint16_t nvme_fs_open(NvmeCmd *cmd, NvmeRequest *req) {
-    NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
+static uint16_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    NvmeFsCmd *fs = (NvmeFsCmd *)cmd;
+
+    uint32_t nlb  = le16_to_cpu(fs->nlb) + 1;
+    uint64_t slba = le64_to_cpu(fs->slba);
+    uint64_t prp1 = le64_to_cpu(fs->prp1);
+    const uint8_t lba_index = NVME_ID_NS_FLBAS_INDEX(ns->id_ns.flbas);
+    const uint8_t data_shift = ns->id_ns.lbaf[lba_index].ds;
+    uint64_t data_size = (uint64_t)nlb << data_shift;
+    uint64_t data_offset = slba << data_shift;
+    hwaddr len = n->page_size;
+
+    /* Processing prp1 */
+    void *filename = malloc(len);
+    bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, is_write);
+    printf("opening filename = %s\n", filename);
+
     return NVME_SUCCESS;
 }
 
-static uint16_t nvme_fs_read(NvmeCmd *cmd, NvmeRequest *req) {
-    NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
+static uint16_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    NvmeFsCmd *fs = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }
 
-static uint16_t nvme_fs_write(NvmeCmd *cmd, NvmeRequest *req) {
-    NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
+static uint16_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    NvmeFsCmd *fs = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }
 
-static uint16_t nvme_fs_close(NvmeCmd *cmd, NvmeRequest *req) {
-    NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
+static uint16_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    NvmeFsCmd *fs = (NvmeFsCmd *)cmd;
+
+    uint32_t fd = fs->fd;
+    printf("closing fd = %" PRIu32 "\n", fd);
+
     return NVME_SUCCESS;
 }
 
@@ -452,13 +472,13 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
 
     /* yesa: Handling NVMe FS commands */
     case NVME_CMD_FS_OPEN:
-        return nvme_fs_open(cmd, req);
+        return nvme_fs_open(n, ns, cmd);
     case NVME_CMD_FS_READ:
-        return nvme_fs_read(cmd, req);
+        return nvme_fs_read(n, ns, cmd);
     case NVME_CMD_FS_WRITE:
-        return nvme_fs_write(cmd, req);
+        return nvme_fs_write(n, ns, cmd);
     case NVME_CMD_FS_CLOSE:
-        return nvme_fs_close(cmd, req);
+        return nvme_fs_close(n, ns, cmd);
 
     default:
         return NVME_INVALID_OPCODE | NVME_DNR;
