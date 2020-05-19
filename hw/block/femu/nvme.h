@@ -274,6 +274,10 @@ enum NvmeIoCommands {
     NVME_CMD_COMPARE            = 0x05,
     NVME_CMD_WRITE_ZEROS        = 0x08,
     NVME_CMD_DSM                = 0x09,
+    NVME_CMD_FS_OPEN            = 0xff,
+    NVME_CMD_FS_READ            = 0xfe,
+    NVME_CMD_FS_WRITE           = 0xfd,
+    NVME_CMD_FS_CLOSE           = 0xfc,
 };
 
 typedef struct NvmeDeleteQ {
@@ -353,6 +357,24 @@ typedef struct NvmeRwCmd {
     uint16_t    nlb;
     uint16_t    control;
     uint32_t    dsmgmt;
+    uint32_t    reftag;
+    uint16_t    apptag;
+    uint16_t    appmask;
+} NvmeRwCmd;
+
+typedef struct NvmeFsCmd {
+    uint8_t     opcode;
+    uint8_t     flags;
+    uint16_t    cid;
+    uint32_t    nsid;
+    uint64_t    rsvd2;
+    uint64_t    mptr;
+    uint64_t    prp1;
+    uint64_t    prp2;
+    uint64_t    slba;
+    uint16_t    nlb;
+    uint16_t    control;
+    uint32_t    fd;
     uint32_t    reftag;
     uint16_t    apptag;
     uint16_t    appmask;
@@ -1232,11 +1254,11 @@ enum {
 
 /* yesa: FS-related functions
  * */
-extern uint64_t fs_get_inode_total(struct fs_inode_table *inode_table, uint64_t mem_size_bytes);
-extern uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename);
-extern uint64_t fs_get_fd_of_file(struct fs_inode_table *inode_table, char *filename);
-extern struct fs_inode fs_get_inode_of_fd(struct fs_inode_table *inode_table, int fd);
 extern void fs_init(FemuCtrl *n);
+extern uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
+extern uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
+extern uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
+extern uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
 
 static inline bool OCSSD(FemuCtrl *n)
 {

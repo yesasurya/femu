@@ -3,6 +3,9 @@
 
 #include "qemu/osdep.h"
 
+#define FS_FILENAME_NOT_FOUND -1
+#define FS_NO_INODE_AVAILABLE -1
+
 enum fs_inode_type {
     FS_INODE_FILE = 0
 };
@@ -13,7 +16,7 @@ struct fs_inode {
     uint64_t number;
     uint64_t address;
     size_t length;
-    struct fs_inode* inodes;
+    bool is_used;
 };
 
 struct fs_inode_table {

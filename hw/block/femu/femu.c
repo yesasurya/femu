@@ -430,6 +430,16 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
         case FEMU_OC12_CMD_ERASE_ASYNC:
             return femu_oc12_erase_async(n, ns, cmd, req);
 
+        /* yesa: NVMe FS command handling */
+        case NVME_CMD_FS_OPEN:
+            nvme_fs_open(n, ns, cmd);
+        case NVME_CMD_FS_CLOSE:
+            nvme_fs_close(n, ns, cmd);
+        case NVME_CMD_FS_READ:
+            nvme_fs_read(n, ns, cmd);
+        case NVME_CMD_FS_WRITE:
+            nvme_fs_write(n, ns, cmd)
+
         default:
             return NVME_INVALID_OPCODE | NVME_DNR;
         }
