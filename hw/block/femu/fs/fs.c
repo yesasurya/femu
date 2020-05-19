@@ -1,4 +1,10 @@
-#include "qemu/osdep.h"
+#include "qemu/cutils.h"
+#include "qemu/bitops.h"
+#include "hw/virtio/vhost.h"
+#include "sysemu/hostmem.h"
+#include "mem-backend.h"
+#include "include/rte_ring.h"
+#include "include/pqueue.h"
 #include "fs.h"
 #include "../nvme.h"
 
