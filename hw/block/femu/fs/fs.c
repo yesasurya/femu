@@ -33,9 +33,24 @@ uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
     inode->type = FS_INODE_FILE;
     inode->filename = filename;
     inode->number = inode_table->num_entries + 1;
-    inode->address = (SLBA_FS_START * 0x200) + (inode->number - 1) * inode_table->max_file_size;
+    inode->address = (inode->number - 1) * inode_table->max_file_size;
     inode->length = 0;
 
     inode_table->num_entries++;
     return inode->number;
+}
+
+void fs_init(FemuCtrl *n) {
+    n->inode_table = malloc(sizeof(struct fs_inode_table));
+    n->inode_table->max_file_size = 131072; //128MB
+    uint64_t inode_total = fs_get_inode_total(n->inode_table, n->mbe.size);
+    n->inode_table->max_entries = inode_total;
+    n->inode_table->num_entries = 0;
+    n->inode_table->inodes = malloc((inode_total + 1) * sizeof(struct fs_inode));
+    if (n->inode_table->inodes == NULL) {
+        printf("YESA LOG: Inode table allocation failed\n");
+        abort();
+    } else {
+        printf("YESA LOG: Inode table allocation success. n->mbe.size = %" PRIu64 ", inode_total = %" PRIu64 "\n", n->mbe.size, inode_total);
+    }
 }

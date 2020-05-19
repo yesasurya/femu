@@ -270,46 +270,7 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     /* Processing prp1 */
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
-
-    if (slba == SLBA_DATA && rw->opcode == NVME_CMD_READ) {
-        int fd = *(int *)(n->mbe.mem_backend + (SLBA_FD * 0x200));
-        int len = *(int *)(n->mbe.mem_backend + (SLBA_DATA_LEN * 0x200));
-
-        struct fs_inode inode = fs_get_inode_of_fd(n->inode_table, fd);
-        uint64_t address = inode.address;
-        memcpy(n->mbe.mem_backend + (SLBA_DATA * 0x200), n->mbe.mem_backend + address, 4096);
-    }
-
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-
-    if (slba == SLBA_FILENAME) {
-        int filename_length = 0;
-        void *filename_start_address = (void *)(n->mbe.mem_backend + (SLBA_FILENAME * 0x200));
-        char c = *(char *)(filename_start_address + filename_length);
-        while (c != '\0') {
-            filename_length++;
-            c = *(char *)(filename_start_address + filename_length);
-        }
-        char *filename = malloc(sizeof(char) * filename_length);
-        memcpy(filename, filename_start_address, filename_length);
-
-        int fd = fs_open_file(n->inode_table, filename);
-        memcpy(n->mbe.mem_backend + (SLBA_FD * 0x200), &fd, sizeof(fd));
-
-        return NVME_SUCCESS;
-    }
-
-    if (slba == SLBA_DATA && rw->opcode == NVME_CMD_WRITE) {
-        int fd = *(int *)(n->mbe.mem_backend + (SLBA_FD * 0x200));
-        int len = *(int *)(n->mbe.mem_backend + (SLBA_DATA_LEN * 0x200));
-
-        struct fs_inode inode = fs_get_inode_of_fd(n->inode_table, fd);
-        uint64_t address = inode.address;
-        memcpy(n->mbe.mem_backend + address, n->mbe.mem_backend + (SLBA_DATA * 0x200), 4096);
-
-        return NVME_SUCCESS;
-    }
-
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
         buf += len;
@@ -1121,20 +1082,8 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
 
     femu_init_mem_backend(&n->mbe, bs_size);
     n->mbe.femu_mode = n->femu_mode;
-    
-    // yesa:    Currently, inode table is allocated here. Max file size will be set to 128MB
-    n->inode_table = malloc(sizeof(struct fs_inode_table));
-    n->inode_table->max_file_size = 131072;
-    uint64_t inode_total = fs_get_inode_total(n->inode_table, n->mbe.size);
-    n->inode_table->max_entries = inode_total;
-    n->inode_table->num_entries = 0;
-    n->inode_table->inodes = malloc((inode_total + 1) * sizeof(struct fs_inode));
-    if (n->inode_table->inodes == NULL) {
-        femu_debug("Inode table allocation failed.");
-        abort();
-    } else {
-        printf("YESA LOG: n->mbe.size = %" PRIu64 ", inode_total = %" PRIu64 "\n", n->mbe.size, inode_total);
-    }
+
+    fs_init(n);
 
     n->completed = 0;
     n->start_time = time(NULL);

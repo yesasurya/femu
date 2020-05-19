@@ -1230,6 +1230,14 @@ enum {
     FEMU_DEF_NOSSD_MODE,
 };
 
+/* yesa: FS-related functions
+ * */
+extern uint64_t fs_get_inode_total(struct fs_inode_table *inode_table, uint64_t mem_size_bytes);
+extern uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename);
+extern uint64_t fs_get_fd_of_file(struct fs_inode_table *inode_table, char *filename);
+extern struct fs_inode fs_get_inode_of_fd(struct fs_inode_table *inode_table, int fd);
+extern void fs_init(FemuCtrl *n);
+
 static inline bool OCSSD(FemuCtrl *n)
 {
     return (n->femu_mode == FEMU_WHITEBOX_MODE);
@@ -1243,12 +1251,6 @@ static inline bool BBSSD(FemuCtrl *n)
 extern void ssd_init(FemuCtrl *n);
 extern uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req);
 extern uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req);
-
-// fs
-extern uint64_t fs_get_inode_total(struct fs_inode_table *inode_table, uint64_t mem_size_bytes);
-extern uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename);
-extern uint64_t fs_get_fd_of_file(struct fs_inode_table *inode_table, char *filename);
-extern struct fs_inode fs_get_inode_of_fd(struct fs_inode_table *inode_table, int fd);
 
 void femu_oc12_exit(FemuCtrl *n);
 int femu_oc12_init(FemuCtrl *n);
