@@ -1,3 +1,4 @@
+#include "qemu/osdep.h"
 #include "fs.h"
 #include "../nvme.h"
 
