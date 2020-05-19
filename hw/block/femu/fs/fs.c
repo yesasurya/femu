@@ -1,4 +1,7 @@
 #include "fs.h"
+#include "hw/block/block.h"
+#include "hw/pci/msix.h"
+#include "hw/pci/msi.h"
 #include "../nvme.h"
 
 uint64_t fs_get_inode_total(struct fs_inode_table *inode_table, uint64_t mem_size_bytes) {
