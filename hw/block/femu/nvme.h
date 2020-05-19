@@ -378,7 +378,7 @@ typedef struct NvmeFsCmd {
     uint32_t    reftag;
     uint16_t    apptag;
     uint16_t    appmask;
-} NvmeRwCmd;
+} NvmeFsCmd;
 
 enum {
     NVME_RW_LR                  = 1 << 15,
