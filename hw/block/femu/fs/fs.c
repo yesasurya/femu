@@ -33,13 +33,13 @@ uint64_t fs_get_unused_inode_index(struct fs_inode_table *inode_table) {
     return FS_NO_INODE_AVAILABLE;
 }
 
-void fs_init_inode(struct fs_inode *inode, uint64_t number) {
-    inode->type = FS_INODE_FILE;
-    inode->filename = "";
-    inode->number = number;
-    inode->address = (number - 1) * inode_table->max_file_size;
-    inode->length = 0;
-    inode->is_used = false;
+void fs_init_inode(struct fs_inode_table *inode_table, uint64_t number) {
+    inode_table->inodes[number].type = FS_INODE_FILE;
+    inode_table->inodes[number].filename = "";
+    inode_table->inodes[number].number = number;
+    inode_table->inodes[number].address = (number - 1) * inode_table->max_file_size;
+    inode_table->inodes[number].length = 0;
+    inode_table->inodes[number].is_used = false;
 }
 
 void fs_init_inode_table(FemuCtrl *n) {
@@ -56,7 +56,7 @@ void fs_init_inode_table(FemuCtrl *n) {
     }
 
     for (int i = 1; i <= n->inode_table->max_entries; i++) {
-        fs_init_inode(n->inode_table->inodes[i], i);
+        fs_init_inode(n->inode_table, i);
     }
 }
 
@@ -120,7 +120,7 @@ uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     printf("YESA LOG: closing file fd = %" PRIu32 "\n", fs_cmd->fd);
 
-    fs_close_file(n->inode_table, fd);
+    fs_close_file(n->inode_table, fs_cmd->fd);
 
     return NVME_SUCCESS;
 }

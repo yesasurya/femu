@@ -438,7 +438,7 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
         case NVME_CMD_FS_READ:
             nvme_fs_read(n, ns, cmd);
         case NVME_CMD_FS_WRITE:
-            nvme_fs_write(n, ns, cmd)
+            nvme_fs_write(n, ns, cmd);
 
         default:
             return NVME_INVALID_OPCODE | NVME_DNR;
