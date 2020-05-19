@@ -276,6 +276,7 @@ enum NvmeIoCommands {
     NVME_CMD_FS_OPEN            = 0xff,
     NVME_CMD_FS_READ            = 0xfe,
     NVME_CMD_FS_WRITE           = 0xfd,
+    NVME_CMD_FS_CLOSE           = 0xfc,
 };
 
 typedef struct NvmeDeleteQ {

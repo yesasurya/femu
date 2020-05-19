@@ -32,25 +32,8 @@ static void nvme_post_cqe(NvmeCQueue *cq, NvmeRequest *req)
     } else {
         cqe->status = cpu_to_le16((req->status << 1) | phase);
     }
-    cqe->n.result = 66;
     cqe->sq_id = cpu_to_le16(sq->sqid);
     cqe->sq_head = cpu_to_le16(sq->head);
-
-    if (cqe->n.result) {
-        printf("YESA LOG: cqe->n.result = %" PRIu32 "\n", cqe->n.result);
-    }
-    if (cqe->n.rsvd) {
-        printf("YESA LOG: cqe->n.rsvd = %" PRIu32 "\n", cqe->n.rsvd);
-    }
-    if (cqe->sq_head) {
-        printf("YESA LOG: cqe->sq_head = %" PRIu16 "\n", cqe->sq_head);
-    }
-    if (cqe->sq_id) {
-        printf("YESA LOG: cqe->sq_id = %" PRIu16 "\n", cqe->sq_id);
-    }
-    if (cqe->cid) {
-        printf("YESA LOG: cqe->cid = %" PRIu16 "\n", cqe->cid);
-    }
 
     if (cq->phys_contig) {
         addr = cq->dma_addr + cq->tail * n->cqe_size;
@@ -392,29 +375,22 @@ static uint16_t nvme_rw(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd,
 }
 
 static uint16_t nvme_fs_open(NvmeCmd *cmd, NvmeRequest *req) {
-    printf("YESA LOG: nvme_fs_open\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
-    if (rw->dsmgmt) {
-        printf("YESA LOG: rw->dsmgmt = %" PRIu32 "\n", rw->dsmgmt);
-    }
     return NVME_SUCCESS;
 }
 
 static uint16_t nvme_fs_read(NvmeCmd *cmd, NvmeRequest *req) {
-    printf("YESA LOG: nvme_fs_read\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
-    if (rw->dsmgmt) {
-        printf("YESA LOG: rw->dsmgmt = %" PRIu32 "\n", rw->dsmgmt);
-    }
     return NVME_SUCCESS;
 }
 
 static uint16_t nvme_fs_write(NvmeCmd *cmd, NvmeRequest *req) {
-    printf("YESA LOG: nvme_fs_write\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
-    if (rw->dsmgmt) {
-        printf("YESA LOG: rw->dsmgmt = %" PRIu32 "\n", rw->dsmgmt);
-    }
+    return NVME_SUCCESS;
+}
+
+static uint16_t nvme_fs_close(NvmeCmd *cmd, NvmeRequest *req) {
+    NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
     return NVME_SUCCESS;
 }
 
@@ -481,6 +457,8 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
         return nvme_fs_read(cmd, req);
     case NVME_CMD_FS_WRITE:
         return nvme_fs_write(cmd, req);
+    case NVME_CMD_FS_CLOSE:
+        return nvme_fs_close(cmd, req);
 
     default:
         return NVME_INVALID_OPCODE | NVME_DNR;
