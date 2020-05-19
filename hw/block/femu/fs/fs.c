@@ -5,10 +5,10 @@
 #include "hw/pci/msi.h"
 #include "../nvme.h"
 
-struct fs_inode fs_get_inode_of_fd(struct fs_inode_table *inode_table, int fd) {
+struct fs_inode *fs_get_inode_of_fd(struct fs_inode_table *inode_table, int fd) {
     for (int i = 1; i <= inode_table->num_entries; i++) {
-        struct fs_inode inode = inode_table->inodes[i];
-        if (inode.number == fd) {
+        struct fs_inode *inode = &inode_table->inodes[i];
+        if (inode->number == fd) {
             return inode;
         }
     }
@@ -18,16 +18,16 @@ uint64_t fs_get_fd_of_file(struct fs_inode_table *inode_table, char *filename) {
     printf("YESA LOG: inode_table->max_entries = %" PRIu64 "\n", inode_table->max_entries);
     for (int i = 1; i <= inode_table->max_entries; i++) {
         printf("Iteration %d\n", i);
-        struct fs_inode inode = inode_table->inodes[i];
-        if (inode.is_used) {
+        struct fs_inode *inode = &inode_table->inodes[i];
+        if (inode->is_used) {
             printf("YESA LOG: inode is used\n");
         } else {
             printf("YESA LOG: inode is not used\n");
         }
         printf("filename = %s\n", filename);
-        printf("inode.filename = %s\n", inode.filename);
-        if (inode.is_used && strcmp(filename, inode.filename) == 0) {
-            return inode.number;
+        printf("inode->filename = %s\n", inode->filename);
+        if (inode->is_used && strcmp(filename, inode->filename) == 0) {
+            return inode->number;
         }
     }
     return FS_FILENAME_NOT_FOUND;
@@ -80,20 +80,20 @@ uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
         printf("YESA LOG: No inode available\n");
         abort();
     }
-    struct fs_inode inode = inode_table->inodes[unused_inode_index];
-    inode.filename = filename;
-    inode.is_used = true;
+    struct fs_inode *inode = &inode_table->inodes[unused_inode_index];
+    inode->filename = filename;
+    inode->is_used = true;
     inode_table->num_entries++;
-    return inode.number;
+    return inode->number;
 }
 
 void fs_close_file(struct fs_inode_table *inode_table, uint64_t fd) {
-    struct fs_inode inode = fs_get_inode_of_fd(inode_table, fd);
-    if (!inode.is_used) {
+    struct fs_inode *inode = fs_get_inode_of_fd(inode_table, fd);
+    if (!inode->is_used) {
         printf("YESA LOG: fd has not been used\n");
         abort();
     }
-    inode.is_used = false;
+    inode->is_used = false;
 }
 
 void fs_init(FemuCtrl *n) {
