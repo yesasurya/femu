@@ -58,6 +58,8 @@ void fs_init_inode_table(FemuCtrl *n) {
     for (int i = 1; i <= n->inode_table->max_entries; i++) {
         fs_init_inode(n->inode_table, i);
     }
+
+    n->filename = malloc(4096);
 }
 
 uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
@@ -103,8 +105,7 @@ uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
 
     hwaddr len = n->page_size;
     /* Processing prp1 */
-    char *filename = malloc(len);
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, false);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->filename, len, false);
 //    uint64_t fd = fs_open_file(n->inode_table, filename);
 
     return NVME_SUCCESS;
