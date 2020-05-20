@@ -58,8 +58,6 @@ void fs_init_inode_table(FemuCtrl *n) {
     for (int i = 1; i <= n->inode_table->max_entries; i++) {
         fs_init_inode(n->inode_table, i);
     }
-
-    n->filename = malloc(4096);
 }
 
 uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
@@ -93,7 +91,7 @@ void fs_init(FemuCtrl *n) {
     fs_init_inode_table(n);
 }
 
-uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
     uint64_t slba = le64_to_cpu(fs_cmd->slba);
@@ -105,7 +103,7 @@ uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
 
     hwaddr len = n->page_size;
     /* Processing prp1 */
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->filename, len, false);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->filename[index_poller], len, false);
 //    uint64_t fd = fs_open_file(n->inode_table, filename);
 
     return NVME_SUCCESS;

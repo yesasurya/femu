@@ -229,6 +229,11 @@ void femu_create_nvme_poller(FemuCtrl *n)
         }
     }
 
+    n->filename = malloc(sizeof(void *) * (n->num_poller) + 1);
+    for (int i = 1; i <= n->num_poller; i++) {
+        n->filename[i] = malloc(4096);
+    }
+
     n->poller = malloc(sizeof(QemuThread) * (n->num_poller + 1));
     NvmePollerThreadArgument *args = malloc(sizeof(NvmePollerThreadArgument) * (n->num_poller + 1));
     for (int i = 1; i <= n->num_poller; i++) {
@@ -374,7 +379,7 @@ static uint16_t nvme_rw(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd,
     return NVME_DNR;
 }
 
-static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
+static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int index_poller)
 {
     NvmeNamespace *ns;
     uint32_t nsid = le32_to_cpu(cmd->nsid);
@@ -432,7 +437,7 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
 
         /* yesa: NVMe FS command handling */
         case NVME_CMD_FS_OPEN:
-            return nvme_fs_open(n, ns, cmd);
+            return nvme_fs_open(n, ns, cmd, index_poller);
         case NVME_CMD_FS_CLOSE:
             return nvme_fs_close(n, ns, cmd);
         case NVME_CMD_FS_READ:
@@ -516,7 +521,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
         /* Coperd: For TIFA */
         req->tifa_cmd_flag = ((NvmeRwCmd *)&cmd)->rsvd2;
 
-        status = nvme_io_cmd(n, &cmd, req);
+        status = nvme_io_cmd(n, &cmd, req, index_poller);
         if (1 || status == NVME_SUCCESS) {
             req->status = status;
 
