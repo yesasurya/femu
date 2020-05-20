@@ -105,14 +105,14 @@ uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     /* Processing prp1 */
     char *filename = malloc(len);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, false);
-    uint64_t fd = fs_open_file(n->inode_table, filename);
+//    uint64_t fd = fs_open_file(n->inode_table, filename);
 
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
-    fs_close_file(n->inode_table, fs_cmd->fd);
+//    fs_close_file(n->inode_table, fs_cmd->fd);
 
     return NVME_SUCCESS;
 }
