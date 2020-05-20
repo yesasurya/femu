@@ -92,8 +92,6 @@ void fs_init(FemuCtrl *n) {
 }
 
 uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
-    printf("YESA LOG: nvme_fs_open\n");
-
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
     uint64_t slba = le64_to_cpu(fs_cmd->slba);
@@ -107,20 +105,13 @@ uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     /* Processing prp1 */
     char *filename = malloc(len);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, filename, len, false);
-    printf("YESA LOG: opening filename = %s\n", filename);
-
     uint64_t fd = fs_open_file(n->inode_table, filename);
-    printf("YESA LOG: file fd = %" PRIu64 "\n", fd);
 
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
-    printf("YESA LOG: nvme_fs_close\n");
-
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
-    printf("YESA LOG: closing file fd = %" PRIu32 "\n", fs_cmd->fd);
-
     fs_close_file(n->inode_table, fs_cmd->fd);
 
     return NVME_SUCCESS;
