@@ -105,6 +105,7 @@ uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_po
     /* Processing prp1 */
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->filename[index_poller], len, false);
 //    uint64_t fd = fs_open_file(n->inode_table, filename);
+    printf("YESA LOG: filename = %s, from index_poller = %d\n", n->filename[index_poller], index_poller);
 
     return NVME_SUCCESS;
 }
