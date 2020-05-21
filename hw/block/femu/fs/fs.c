@@ -93,19 +93,19 @@ void fs_init(FemuCtrl *n) {
 
 uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
-    uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
-    uint64_t slba = le64_to_cpu(fs_cmd->slba);
-    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-    const uint8_t lba_index = NVME_ID_NS_FLBAS_INDEX(ns->id_ns.flbas);
-    const uint8_t data_shift = ns->id_ns.lbaf[lba_index].ds;
-    uint64_t data_size = (uint64_t)nlb << data_shift;
-    uint64_t data_offset = slba << data_shift;
-
-    hwaddr len = n->page_size;
+//    uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
+//    uint64_t slba = le64_to_cpu(fs_cmd->slba);
+//    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
+//    const uint8_t lba_index = NVME_ID_NS_FLBAS_INDEX(ns->id_ns.flbas);
+//    const uint8_t data_shift = ns->id_ns.lbaf[lba_index].ds;
+//    uint64_t data_size = (uint64_t)nlb << data_shift;
+//    uint64_t data_offset = slba << data_shift;
+//
+//    hwaddr len = n->page_size;
     /* Processing prp1 */
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->filename[index_poller], len, false);
+//    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->filename[index_poller], len, false);
 //    uint64_t fd = fs_open_file(n->inode_table, filename);
-    printf("YESA LOG: filename = %s, from index_poller = %d\n", n->filename[index_poller], index_poller);
+//    printf("YESA LOG: filename = %s, from index_poller = %d\n", n->filename[index_poller], index_poller);
 
     return NVME_SUCCESS;
 }
