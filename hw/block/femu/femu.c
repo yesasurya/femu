@@ -379,7 +379,7 @@ static uint16_t nvme_rw(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd,
     return NVME_DNR;
 }
 
-static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int index_poller)
+static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
 {
     NvmeNamespace *ns;
     uint32_t nsid = le32_to_cpu(cmd->nsid);
@@ -437,7 +437,7 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
 
         /* yesa: NVMe FS command handling */
         case NVME_CMD_FS_OPEN:
-            return nvme_fs_open(n, ns, cmd, index_poller);
+            return nvme_fs_open(n, ns, cmd);
         case NVME_CMD_FS_CLOSE:
             return nvme_fs_close(n, ns, cmd);
         case NVME_CMD_FS_READ:
@@ -521,7 +521,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
         /* Coperd: For TIFA */
         req->tifa_cmd_flag = ((NvmeRwCmd *)&cmd)->rsvd2;
 
-        status = nvme_io_cmd(n, &cmd, req, index_poller);
+        status = nvme_io_cmd(n, &cmd, req);
         if (1 || status == NVME_SUCCESS) {
             req->status = status;
 

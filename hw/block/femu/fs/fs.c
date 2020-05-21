@@ -91,40 +91,22 @@ void fs_init(FemuCtrl *n) {
     fs_init_inode_table(n);
 }
 
-uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
+uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
-//    uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
-//    uint64_t slba = le64_to_cpu(fs_cmd->slba);
-//    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-//    const uint8_t lba_index = NVME_ID_NS_FLBAS_INDEX(ns->id_ns.flbas);
-//    const uint8_t data_shift = ns->id_ns.lbaf[lba_index].ds;
-//    uint64_t data_size = (uint64_t)nlb << data_shift;
-//    uint64_t data_offset = slba << data_shift;
-//
-//    hwaddr len = n->page_size;
-    /* Processing prp1 */
-//    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->filename[index_poller], len, false);
-//    uint64_t fd = fs_open_file(n->inode_table, filename);
-//    printf("YESA LOG: filename = %s, from index_poller = %d\n", n->filename[index_poller], index_poller);
-
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
-//    fs_close_file(n->inode_table, fs_cmd->fd);
-
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
-    printf("YESA LOG: nvme_fs_read\n");
-
+    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
-    printf("YESA LOG: nvme_fs_write\n");
-
+    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }
