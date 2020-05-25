@@ -36,9 +36,11 @@ static void nvme_post_cqe(NvmeCQueue *cq, NvmeRequest *req)
     cqe->sq_head = cpu_to_le16(sq->head);
 
     if (cq->phys_contig) {
+        printf("YESA LOG: cq->phys_contig = TRUE\n");
         addr = cq->dma_addr + cq->tail * n->cqe_size;
         ((NvmeCqe *)cq->dma_addr_hva)[cq->tail] = *cqe;
     } else {
+        printf("YESA LOG: cq->phys_contig = FALSE\n");
         addr = nvme_discontig(cq->prp_list, cq->tail, n->page_size, n->cqe_size);
         femu_nvme_addr_write(n, addr, (void *)cqe, sizeof(*cqe));
     }
