@@ -137,7 +137,7 @@ static void *nvme_poller(void *arg)
 
                 NvmeSQueue *sq = n->sq[index];
                 NvmeCQueue *cq = n->cq[index];
-                if (sq && sq->is_active && cq && cq->is_active && index == 1) {
+                if (sq && sq->is_active && cq && cq->is_active) {
                     nvme_process_sq_io(sq, index);
                 }
                 nvme_process_cq_cpl(n, index);
@@ -502,6 +502,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
 
     nvme_update_sq_tail(sq);
     while (!(nvme_sq_empty(sq))) {
+        printf("YESA LOG: Cmd from index_poller = %d\n", index_poller);
         if (sq->phys_contig) {
             addr = sq->dma_addr + sq->head * n->sqe_size;
             nvme_copy_cmd(&cmd, (void *)&(((NvmeCmd *)sq->dma_addr_hva)[sq->head]));
