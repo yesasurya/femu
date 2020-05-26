@@ -1229,7 +1229,6 @@ typedef struct FemuCtrl {
     uint32_t        num_poller;
 
     struct fs_inode_table   *inode_table;
-    void **filename;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {

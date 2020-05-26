@@ -44,6 +44,7 @@ void fs_init_inode(struct fs_inode_table *inode_table, uint64_t number) {
 
 void fs_init_inode_table(FemuCtrl *n) {
     n->inode_table = malloc(sizeof(struct fs_inode_table));
+    n->inode_table->filename_buf = malloc(4096);
     n->inode_table->max_file_size = 131072; //128MB
     n->inode_table->max_entries = n->mbe.size / n->inode_table->max_file_size;
     n->inode_table->num_entries = 0;
@@ -93,6 +94,18 @@ void fs_init(FemuCtrl *n) {
 
 uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
+
+    uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
+    uint64_t slba = le64_to_cpu(fs_cmd->slba);
+    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
+    const uint8_t lba_index = NVME_ID_NS_FLBAS_INDEX(ns->id_ns.flbas);
+    const uint8_t data_shift = ns->id_ns.lbaf[lba_index].ds;
+    uint64_t data_size = (uint64_t)nlb << data_shift;
+    uint64_t data_offset = slba << data_shift;
+
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->inode_table->filename_buf, n->page_size, false);
+    fs_open_file(n->inode_table, n->inode_table->filename_buf);
+
     return NVME_SUCCESS;
 }
 
