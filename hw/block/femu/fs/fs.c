@@ -42,7 +42,7 @@ void fs_init_inode(struct fs_inode_table *inode_table, uint64_t number) {
     inode_table->inodes[number].is_used = false;
 }
 
-void fs_init_inode_table(FemuCtrl *n, int num_poller) {
+void fs_init_inode_table(FemuCtrl *n) {
     n->inode_table = malloc(sizeof(struct fs_inode_table));
     n->inode_table->max_file_size = 131072; //128MB
     n->inode_table->max_entries = n->mbe.size / n->inode_table->max_file_size;
