@@ -1291,7 +1291,7 @@ uint32_t femu_oc12_tbl_size(NvmeNamespace *ns);
 
 
 void nvme_process_sq_admin(void *opaque);
-void nvme_process_sq_io(void *opaque, int index_poller, unsigned long long *temp);
+void nvme_process_sq_io(void *opaque, int index_poller);
 
 void femu_nvme_addr_read(FemuCtrl *n, hwaddr addr, void *buf, int size);
 void femu_nvme_addr_write(FemuCtrl *n, hwaddr addr, void *buf, int size);
@@ -1330,7 +1330,7 @@ void nvme_vector_poll(PCIDevice *dev, unsigned int vector_start,
 uint16_t nvme_create_cq(FemuCtrl *n, NvmeCmd *cmd);
 uint16_t nvme_set_db_memory(FemuCtrl *n, const NvmeCmd *cmd);
 void nvme_clear_guest_notifier(FemuCtrl *n);
-void nvme_update_sq_tail(NvmeSQueue *sq, int index_poller, unsigned long long *temp);
+void nvme_update_sq_tail(NvmeSQueue *sq, int index_poller);
 uint64_t nvme_cmb_read(void *opaque, hwaddr addr, unsigned size);
 void nvme_cmb_write(void *opaque, hwaddr addr, uint64_t data, unsigned size);
 

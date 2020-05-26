@@ -122,8 +122,6 @@ static void *nvme_poller(void *arg)
     FemuCtrl *n = ((NvmePollerThreadArgument *)arg)->n;
     int index = ((NvmePollerThreadArgument *)arg)->index;
 
-    unsigned long long temp = 0;
-
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     CPU_SET(39 - index, &cpuset);
@@ -140,8 +138,7 @@ static void *nvme_poller(void *arg)
                 NvmeSQueue *sq = n->sq[index];
                 NvmeCQueue *cq = n->cq[index];
                 if (sq && sq->is_active && cq && cq->is_active) {
-                    nvme_process_sq_io(sq, index, &temp);
-                    temp = temp + 1;
+                    nvme_process_sq_io(sq, index);
                 }
                 nvme_process_cq_cpl(n, index);
             }
@@ -158,7 +155,7 @@ static void *nvme_poller(void *arg)
                     NvmeSQueue *sq = n->sq[i];
                     NvmeCQueue *cq = n->cq[i];
                     if (sq && sq->is_active && cq && cq->is_active) {
-                        nvme_process_sq_io(sq, index, &temp);
+                        nvme_process_sq_io(sq, index);
                     }
                 }
                 nvme_process_cq_cpl(n, index);
@@ -458,12 +455,8 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
         }
 }
 
-static void nvme_update_sq_eventidx(const NvmeSQueue *sq, int index_poller, unsigned long long *temp)
+static void nvme_update_sq_eventidx(const NvmeSQueue *sq, int index_poller)
 {
-    if (*temp == 9000000000 && index_poller == 2) {
-        printf("YESA LOG: nvme_update_sq_eventidx. sq->tail = %" PRIu32 " ; sq->eventidx_addr_hva = %" PRIu32 "\n", sq->tail, *((uint32_t *)(sq->eventidx_addr_hva)));
-        *temp = 0;
-    }
     if (sq->eventidx_addr_hva) {
         *((uint32_t *)(sq->eventidx_addr_hva)) = sq->tail;
         return;
@@ -496,7 +489,7 @@ static inline void nvme_copy_cmd(NvmeCmd *dst, NvmeCmd *src)
 #endif
 }
 
-void nvme_process_sq_io(void *opaque, int index_poller, unsigned long long *temp)
+void nvme_process_sq_io(void *opaque, int index_poller)
 {
     NvmeSQueue *sq = opaque;
     FemuCtrl *n = sq->ctrl;
@@ -507,7 +500,7 @@ void nvme_process_sq_io(void *opaque, int index_poller, unsigned long long *temp
     NvmeRequest *req;
     int processed = 0;
 
-    nvme_update_sq_tail(sq, index_poller, temp);
+    nvme_update_sq_tail(sq, index_poller);
     while (!(nvme_sq_empty(sq))) {
         if (sq->phys_contig) {
             addr = sq->dma_addr + sq->head * n->sqe_size;
@@ -548,7 +541,8 @@ void nvme_process_sq_io(void *opaque, int index_poller, unsigned long long *temp
         processed++;
     }
 
-    nvme_update_sq_eventidx(sq, index_poller, temp);
+    //  yesa: Temporarily disable writing eventidx to doorbell
+    //  nvme_update_sq_eventidx(sq, index_poller);
     sq->completed += processed;
 }
 
