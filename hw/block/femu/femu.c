@@ -101,20 +101,20 @@ static void nvme_process_cq_cpl(void *arg, int index_poller)
     if (processed == 0)
         return;
 
-//    switch (n->multipoller_enabled) {
-//        case 1:
-//            nvme_isr_notify_io(n->cq[index_poller]);
-//            break;
-//
-//        default:
-//            for (i = 1; i <= n->num_io_queues; i++) {
-//                if (n->should_isr[i]) {
-//                    nvme_isr_notify_io(n->cq[i]);
-//                    n->should_isr[i] = false;
-//                }
-//            }
-//            break;
-//    }
+    switch (n->multipoller_enabled) {
+        case 1:
+            nvme_isr_notify_io(n->cq[index_poller]);
+            break;
+
+        default:
+            for (i = 1; i <= n->num_io_queues; i++) {
+                if (n->should_isr[i]) {
+                    nvme_isr_notify_io(n->cq[i]);
+                    n->should_isr[i] = false;
+                }
+            }
+            break;
+    }
 }
 
 static void *nvme_poller(void *arg)
