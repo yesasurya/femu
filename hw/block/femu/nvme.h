@@ -1291,7 +1291,7 @@ uint32_t femu_oc12_tbl_size(NvmeNamespace *ns);
 
 
 void nvme_process_sq_admin(void *opaque);
-void nvme_process_sq_io(void *opaque, int index_poller);
+void nvme_process_sq_io(void *opaque, int index_poller, unsigned long long *temp);
 
 void femu_nvme_addr_read(FemuCtrl *n, hwaddr addr, void *buf, int size);
 void femu_nvme_addr_write(FemuCtrl *n, hwaddr addr, void *buf, int size);
