@@ -137,7 +137,7 @@ static void *nvme_poller(void *arg)
 
                 NvmeSQueue *sq = n->sq[index];
                 NvmeCQueue *cq = n->cq[index];
-                if (sq && sq->is_active && cq && cq->is_active) {
+                if (sq && sq->is_active && cq && cq->is_active && index == 0) {
                     nvme_process_sq_io(sq, index);
                 }
                 nvme_process_cq_cpl(n, index);
