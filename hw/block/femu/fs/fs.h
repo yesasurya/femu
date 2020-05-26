@@ -21,7 +21,7 @@ struct fs_inode {
 
 struct fs_inode_table {
     //  yesa: Temporarily storing filename here. Improved later.
-    char *filename_buf;
+    char **filename_buf;
 
     uint64_t max_file_size;
     uint64_t max_entries;
