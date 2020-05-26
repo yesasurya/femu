@@ -1330,7 +1330,7 @@ void nvme_vector_poll(PCIDevice *dev, unsigned int vector_start,
 uint16_t nvme_create_cq(FemuCtrl *n, NvmeCmd *cmd);
 uint16_t nvme_set_db_memory(FemuCtrl *n, const NvmeCmd *cmd);
 void nvme_clear_guest_notifier(FemuCtrl *n);
-void nvme_update_sq_tail(NvmeSQueue *sq, int index_poller);
+void nvme_update_sq_tail(NvmeSQueue *sq, int index_poller, unsigned long long *temp);
 uint64_t nvme_cmb_read(void *opaque, hwaddr addr, unsigned size);
 void nvme_cmb_write(void *opaque, hwaddr addr, uint64_t data, unsigned size);
 

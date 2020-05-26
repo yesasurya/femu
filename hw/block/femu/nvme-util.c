@@ -687,8 +687,12 @@ uint64_t nvme_cmb_read(void *opaque, hwaddr addr, unsigned size)
     return val;
 }
 
-void nvme_update_sq_tail(NvmeSQueue *sq, int index_poller)
+void nvme_update_sq_tail(NvmeSQueue *sq, int index_poller, unsigned long long *temp)
 {
+    if (*temp == 9000000000 && index_poller == 2) {
+        printf("YESA LOG: nvme_update_sq_tail. sq->tail = %" PRIu32 " ; sq->db_addr_hva = %" PRIu32 "\n", sq->tail, *((uint32_t *)sq->db_addr_hva));
+        *temp = 0;
+    }
     if (sq->db_addr_hva) {
         sq->tail = *((uint32_t *)sq->db_addr_hva);
         return;
