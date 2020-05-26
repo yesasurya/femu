@@ -690,11 +690,13 @@ uint64_t nvme_cmb_read(void *opaque, hwaddr addr, unsigned size)
 void nvme_update_sq_tail(NvmeSQueue *sq)
 {
     if (sq->db_addr_hva) {
+        printf("YESA LOG: HAHAHA\n");
         sq->tail = *((uint32_t *)sq->db_addr_hva);
         return;
     }
 
     if (sq->db_addr) {
+        printf("YESA LOG: LOLOLO\n");
         femu_nvme_addr_read(sq->ctrl, sq->db_addr, &sq->tail, sizeof(sq->tail));
     }
 }
