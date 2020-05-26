@@ -455,8 +455,14 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
         }
 }
 
-static void nvme_update_sq_eventidx(const NvmeSQueue *sq)
+static void nvme_update_sq_eventidx(const NvmeSQueue *sq, int index_poller)
 {
+    if (index_poller == 2) {
+        printf("YESA LOG: nvme_update_sq_eventidx\n");
+        printf("sq->eventidx_addr_hva = %" PRIu32 "\n", *((uint32_t *)sq->eventidx_addr_hva));
+        printf("sq->tail = %" PRIu32 "\n", sq->tail);
+    }
+
     if (sq->eventidx_addr_hva) {
         *((uint32_t *)(sq->eventidx_addr_hva)) = sq->tail;
         return;
@@ -500,7 +506,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
     NvmeRequest *req;
     int processed = 0;
 
-    nvme_update_sq_tail(sq);
+    nvme_update_sq_tail(sq, index_poller);
     while (!(nvme_sq_empty(sq))) {
         if (sq->phys_contig) {
             addr = sq->dma_addr + sq->head * n->sqe_size;
@@ -541,7 +547,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
         processed++;
     }
 
-//    nvme_update_sq_eventidx(sq);
+    nvme_update_sq_eventidx(sq, index_poller);
     sq->completed += processed;
 }
 
