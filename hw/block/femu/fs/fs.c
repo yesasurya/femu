@@ -70,7 +70,6 @@ uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
     if (fd != FS_FILENAME_NOT_FOUND)
         return fd;
 
-    printf("YESA LOG: Creating new file...\n");
     uint64_t unused_inode_index = fs_get_unused_inode_index(inode_table);
     if (unused_inode_index == FS_NO_INODE_AVAILABLE) {
         printf("YESA LOG: No inode available\n");
@@ -97,7 +96,6 @@ void fs_init(FemuCtrl *n) {
 }
 
 uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
-    printf("YESA LOG: nvme_fs_open from index_poller = %d\n", index_poller);
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 
     uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
@@ -110,8 +108,6 @@ uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_po
 
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->inode_table->filename_buf[index_poller], n->page_size, false);
     fs_open_file(n->inode_table, n->inode_table->filename_buf);
-
-    printf("YESA LOG: filename = %s\n", n->inode_table->filename_buf[index_poller]);
 
     return NVME_SUCCESS;
 }
