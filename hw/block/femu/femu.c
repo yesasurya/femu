@@ -541,7 +541,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
         processed++;
     }
 
-    nvme_update_sq_eventidx(sq);
+//    nvme_update_sq_eventidx(sq);
     sq->completed += processed;
 }
 
