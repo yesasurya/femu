@@ -457,12 +457,6 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req)
 
 static void nvme_update_sq_eventidx(const NvmeSQueue *sq, int index_poller)
 {
-    if (index_poller == 2) {
-        printf("YESA LOG: nvme_update_sq_eventidx\n");
-        printf("sq->eventidx_addr_hva = %" PRIu32 "\n", *((uint32_t *)sq->eventidx_addr_hva));
-        printf("sq->tail = %" PRIu32 "\n", sq->tail);
-    }
-
     if (sq->eventidx_addr_hva) {
         *((uint32_t *)(sq->eventidx_addr_hva)) = sq->tail;
         return;
