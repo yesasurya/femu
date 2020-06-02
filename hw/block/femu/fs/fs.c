@@ -126,6 +126,8 @@ uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
 }
 
 uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
+    printf("YESA LOG: nvme_fs_read\n");
+
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 
     uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
@@ -147,6 +149,8 @@ uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
 }
 
 uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    printf("YESA LOG: nvme_fs_lseek\n");
+
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }
