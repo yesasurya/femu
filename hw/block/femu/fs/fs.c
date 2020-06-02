@@ -66,6 +66,7 @@ void fs_init_inode_table(FemuCtrl *n) {
 
     n->inode_table->test_buffer = malloc(sizeof(char *) * (n->num_poller + 1));
     for (int i = 1; i <= n->num_poller; i++) {
+        n->inode_table->test_buffer[i] = malloc(4096);
         for (int j = 0; j < 4096; j++) {
             n->inode_table->test_buffer[i][j] = 'Y';
         }
