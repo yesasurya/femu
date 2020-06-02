@@ -24,7 +24,7 @@ struct fs_inode_table {
     char **filename_buf;
 
     //  yesa: Only for testing
-    char *test_buffer;
+    char **test_buffer;
 
     uint64_t max_file_size;
     uint64_t max_entries;

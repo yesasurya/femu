@@ -443,7 +443,7 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
         case NVME_CMD_FS_CLOSE:
             return nvme_fs_close(n, ns, cmd);
         case NVME_CMD_FS_READ:
-            return nvme_fs_read(n, ns, cmd);
+            return nvme_fs_read(n, ns, cmd, index_poller);
         case NVME_CMD_FS_WRITE:
             return nvme_fs_write(n, ns, cmd);
         case NVME_CMD_FS_LSEEK:

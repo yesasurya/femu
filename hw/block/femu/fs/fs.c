@@ -64,9 +64,11 @@ void fs_init_inode_table(FemuCtrl *n) {
         n->inode_table->filename_buf[i] = malloc(4096);
     }
 
-    n->inode_table->test_buffer = malloc(4096);
-    for (int i = 0; i < 4096; i++) {
-        n->inode_table->test_buffer[i] = 'Y';
+    n->inode_table->test_buffer = malloc(sizeof(char *) * (n->num_poller + 1));
+    for (int i = 1; i <= n->num_poller; i++) {
+        for (int j = 0; j < 4096; j++) {
+            n->inode_table->test_buffer[i][j] = 'Y';
+        }
     }
 }
 
@@ -122,7 +124,7 @@ uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     return NVME_SUCCESS;
 }
 
-uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 
     uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
@@ -133,7 +135,7 @@ uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     uint64_t data_size = (uint64_t)nlb << data_shift;
     uint64_t data_offset = slba << data_shift;
 
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->inode_table->test_buffer, n->page_size, true);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->inode_table->test_buffer[index_poller], n->page_size, true);
 
     return NVME_SUCCESS;
 }
