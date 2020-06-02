@@ -63,6 +63,11 @@ void fs_init_inode_table(FemuCtrl *n) {
     for (int i = 1; i <= n->num_poller; i++) {
         n->inode_table->filename_buf[i] = malloc(4096);
     }
+
+    n->inode_table->test_buffer = malloc(4096);
+    for (int i = 0; i < 4096; i++) {
+        n->inode_table->test_buffer[i] = 'Y';
+    }
 }
 
 uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
@@ -119,10 +124,26 @@ uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
 
 uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
+
+    uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
+    uint64_t slba = le64_to_cpu(fs_cmd->slba);
+    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
+    const uint8_t lba_index = NVME_ID_NS_FLBAS_INDEX(ns->id_ns.flbas);
+    const uint8_t data_shift = ns->id_ns.lbaf[lba_index].ds;
+    uint64_t data_size = (uint64_t)nlb << data_shift;
+    uint64_t data_offset = slba << data_shift;
+
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->inode_table->test_buffer, n->page_size, true);
+
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
+    return NVME_SUCCESS;
+}
+
+uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }

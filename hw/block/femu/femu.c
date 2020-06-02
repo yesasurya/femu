@@ -446,6 +446,8 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
             return nvme_fs_read(n, ns, cmd);
         case NVME_CMD_FS_WRITE:
             return nvme_fs_write(n, ns, cmd);
+        case NVME_CMD_FS_LSEEK:
+            return nvme_fs_lseek(n, ns, cmd);
 
         default:
             return NVME_INVALID_OPCODE | NVME_DNR;

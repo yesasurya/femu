@@ -278,6 +278,7 @@ enum NvmeIoCommands {
     NVME_CMD_FS_CLOSE           = 0xfe,
     NVME_CMD_FS_READ            = 0xfd,
     NVME_CMD_FS_WRITE           = 0xfc,
+    NVME_CMD_FS_LSEEK           = 0xfb,
 };
 
 typedef struct NvmeDeleteQ {
@@ -1259,6 +1260,7 @@ extern uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int i
 extern uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
 extern uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
 extern uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
+extern uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
 
 static inline bool OCSSD(FemuCtrl *n)
 {
