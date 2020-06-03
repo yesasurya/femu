@@ -542,7 +542,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
     }
 
     //  yesa: Temporarily disable writing eventidx to doorbell
-    //  nvme_update_sq_eventidx(sq, index_poller);
+    nvme_update_sq_eventidx(sq, index_poller);
     sq->completed += processed;
 }
 
