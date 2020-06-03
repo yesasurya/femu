@@ -501,7 +501,6 @@ void nvme_process_sq_io(void *opaque, int index_poller)
 
     nvme_update_sq_tail(sq, index_poller);
     while (!(nvme_sq_empty(sq))) {
-        printf("YESA LOG: Receiving command.\n");
         if (sq->phys_contig) {
             addr = sq->dma_addr + sq->head * n->sqe_size;
             nvme_copy_cmd(&cmd, (void *)&(((NvmeCmd *)sq->dma_addr_hva)[sq->head]));
