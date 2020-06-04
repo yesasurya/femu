@@ -147,7 +147,6 @@ uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_p
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
 
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->inode_table->test_buffer[index_poller], n->page_size, false);
-    printf("YESA LOG: res = %s\n", n->inode_table->test_buffer[index_poller]);
 
     return NVME_SUCCESS;
 }
