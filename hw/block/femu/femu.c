@@ -262,6 +262,7 @@ static void femu_destroy_nvme_poller(FemuCtrl *n)
 
 static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd)
 {
+    printf("YESA LOG: femu_rw_mem_backend_nossd\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
     uint32_t nlb  = le16_to_cpu(rw->nlb) + 1;
     uint64_t slba = le64_to_cpu(rw->slba);
@@ -274,6 +275,9 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
 
     hwaddr len = n->page_size;
     uint64_t iteration = data_size / len;
+    printf("YESA LOG: prp1 = %" PRIu64 "\n", prp1);
+    printf("YESA LOG: iteration = %" PRIu64 "\n", iteration);
+
     /* Processing prp1 */
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
