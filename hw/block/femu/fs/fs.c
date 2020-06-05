@@ -101,6 +101,7 @@ void fs_close_file(struct fs_inode_table *inode_table, uint64_t fd) {
 
 void fs_init(FemuCtrl *n) {
     fs_init_inode_table(n);
+    n->io_received = 0;
 }
 
 uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
