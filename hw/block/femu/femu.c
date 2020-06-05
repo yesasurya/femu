@@ -262,7 +262,6 @@ static void femu_destroy_nvme_poller(FemuCtrl *n)
 
 static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd)
 {
-    printf("YESA LOG: femu_rw_mem_backend_nossd\n");
     NvmeRwCmd *rw = (NvmeRwCmd *)cmd;
     uint32_t nlb  = le16_to_cpu(rw->nlb) + 1;
     uint64_t slba = le64_to_cpu(rw->slba);
@@ -275,13 +274,18 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
 
     hwaddr len = n->page_size;
     uint64_t iteration = data_size / len;
-    printf("YESA LOG: prp1 = %" PRIu64 "\n", prp1);
-    printf("YESA LOG: iteration = %" PRIu64 "\n", iteration);
 
     /* Processing prp1 */
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
+    bool check1 = *(char *)(buf) == 89;
+    bool check2 = *(char *)(buf + 1) == 89;
+    bool check3 = *(char *)(buf + 2) == 89;
+    if (check1 && check2 && check3) {
+        printf("YESA LOG: Iki lho...\n");
+    }
+
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
         buf += len;
