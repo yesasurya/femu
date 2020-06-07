@@ -73,7 +73,10 @@ void fs_init_inode_table(FemuCtrl *n) {
             n->inode_table->test_buffer[i][j] = 'Y';
         }
     }
-    n->inode_table->offset = 0;
+    n->inode_table->offset = malloc(sizeof(uint64_t) * 101);
+    for (int i = 0; i <= 100; i++) {
+        n->inode_table->offset[i] = 0;
+    }
 }
 
 uint64_t fs_open_file(struct fs_inode_table *inode_table, char *filename) {
@@ -129,26 +132,26 @@ uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
     return NVME_SUCCESS;
 }
 
-uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
+uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller, int sq_id) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
-    
+
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
 
-    n->inode_table->offset = (n->inode_table->offset + 4096) % n->mbe.size;
+    n->inode_table->offset[sq_id] = (n->inode_table->offset[sq_id] + 4096) % n->mbe.size;
 
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + n->inode_table->offset, n->page_size, true);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + n->inode_table->offset[sq_id], n->page_size, true);
 
     return NVME_SUCCESS;
 }
 
-uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
+uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller, int sq_id) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
 
-    n->inode_table->offset = (n->inode_table->offset + 4096) % n->mbe.size;
+    n->inode_table->offset[sq_id] = (n->inode_table->offset[sq_id] + 4096) % n->mbe.size;
 
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + n->inode_table->offset, n->page_size, false);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + n->inode_table->offset[sq_id], n->page_size, false);
 
     return NVME_SUCCESS;
 }
