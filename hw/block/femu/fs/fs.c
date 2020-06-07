@@ -137,9 +137,8 @@ uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_po
 
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
 
-    n->inode_table->offset[sq_id] = (n->inode_table->offset[sq_id] + 4096) % n->mbe.size;
-
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + n->inode_table->offset[sq_id], n->page_size, true);
+    uint64_t offset = fs_cmd->fd;
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + offset, n->page_size, true);
 
     return NVME_SUCCESS;
 }
@@ -149,9 +148,8 @@ uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_p
 
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
 
-    n->inode_table->offset[sq_id] = (n->inode_table->offset[sq_id] + 4096) % n->mbe.size;
-
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + n->inode_table->offset[sq_id], n->page_size, false);
+    uint64_t offset = fs_cmd->fd;
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->mbe.mem_backend + offset, n->page_size, false);
 
     return NVME_SUCCESS;
 }
