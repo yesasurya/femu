@@ -238,6 +238,7 @@ void femu_create_nvme_poller(FemuCtrl *n)
 
     n->poller = malloc(sizeof(QemuThread) * (n->num_poller + 1));
     NvmePollerThreadArgument *args = malloc(sizeof(NvmePollerThreadArgument) * (n->num_poller + 1));
+    printf("YESA LOG: Creating %d poller threads.\n", n->num_poller);
     for (int i = 1; i <= n->num_poller; i++) {
         args[i].n = n;
         args[i].index = i;
@@ -522,6 +523,7 @@ void nvme_process_sq_io(void *opaque, int index_poller)
 
     nvme_update_sq_tail(sq, index_poller);
     while (!(nvme_sq_empty(sq))) {
+        printf("YESA LOG: Processing I/O from poller with index = %d\n", index_poller);
         if (sq->phys_contig) {
             addr = sq->dma_addr + sq->head * n->sqe_size;
             nvme_copy_cmd(&cmd, (void *)&(((NvmeCmd *)sq->dma_addr_hva)[sq->head]));
