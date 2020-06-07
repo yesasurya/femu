@@ -279,25 +279,25 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-    if (rw->opcode == NVME_CMD_WRITE) {
-        printf("YESA LOG: WRITE -> data_offset = %" PRIu64 "\n", data_offset);
-        printf("YESA LOG: WRITE -> buf = %s\n", (char *)buf);
-    }
-    if (rw->opcode == NVME_CMD_READ) {
-        printf("YESA LOG: READ  -> data_offset = %" PRIu64 "\n", data_offset);
-        printf("YESA LOG: READ  -> buf = %s\n", (char *)buf);
-    }
-
-//    bool check1 = *(char *)(buf) == 89;
-//    bool check2 = *(char *)(buf + 1) == 89;
-//    bool check3 = *(char *)(buf) == 90;
-//    bool check4 = *(char *)(buf + 1) == 90;
-//    if (check1 && check2) {
-//        n->io_received = n->io_received + 1;
-//    } else if (check3 && check4) {
-//        printf("YESA LOG: n->io_received = %" PRIu64 "\n", n->io_received);
-//        n->io_received = 0;
+//    if (rw->opcode == NVME_CMD_WRITE) {
+//        printf("YESA LOG: WRITE -> data_offset = %" PRIu64 "\n", data_offset);
+//        printf("YESA LOG: WRITE -> buf = %s\n", (char *)buf);
 //    }
+//    if (rw->opcode == NVME_CMD_READ) {
+//        printf("YESA LOG: READ  -> data_offset = %" PRIu64 "\n", data_offset);
+//        printf("YESA LOG: READ  -> buf = %s\n", (char *)buf);
+//    }
+
+    bool check1 = *(char *)(buf) == 89;
+    bool check2 = *(char *)(buf + 1) == 89;
+    bool check3 = *(char *)(buf) == 90;
+    bool check4 = *(char *)(buf + 1) == 90;
+    if (check1 && check2) {
+        n->io_received = n->io_received + 1;
+    } else if (check3 && check4) {
+        printf("YESA LOG: n->io_received = %" PRIu64 "\n", n->io_received);
+        n->io_received = 0;
+    }
 
     /* Processing prp2 and its list if exist */
     if (iteration == 2) {
