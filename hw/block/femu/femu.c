@@ -238,7 +238,7 @@ void femu_create_nvme_poller(FemuCtrl *n)
 
     n->poller = malloc(sizeof(QemuThread) * (n->num_poller + 1));
     NvmePollerThreadArgument *args = malloc(sizeof(NvmePollerThreadArgument) * (n->num_poller + 1));
-    printf("YESA LOG: Creating %d poller threads.\n", n->num_poller);
+    printf("YESA LOG: Creating %" PRIu32 " poller threads.\n", n->num_poller);
     for (int i = 1; i <= n->num_poller; i++) {
         args[i].n = n;
         args[i].index = i;
