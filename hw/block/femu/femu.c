@@ -279,7 +279,7 @@ static int femu_rw_mem_backend_nossd(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cm
     void *buf = n->mbe.mem_backend + data_offset;
     bool is_write = (rw->opcode == NVME_CMD_WRITE) ? false : true;
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, buf, len, is_write);
-    if (rw->opcode == NVME_CMD_FS_WRITE || rw->opcode == NVME_CMD_FS_READ) {
+    if (rw->opcode == NVME_CMD_WRITE || rw->opcode == NVME_CMD_READ) {
         printf("YESA LOG: data_offset = %" PRIu64 "\n", data_offset);
         printf("YESA LOG: buf = %s\n", (char *)buf);
     }
