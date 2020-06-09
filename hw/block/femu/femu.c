@@ -124,7 +124,7 @@ static void *nvme_poller(void *arg)
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(47 - index, &cpuset);
+    CPU_SET(48 - index, &cpuset);
     pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 
     switch (n->multipoller_enabled) {
