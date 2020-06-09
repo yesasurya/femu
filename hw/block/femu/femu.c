@@ -121,6 +121,9 @@ static void *nvme_poller(void *arg)
 {
     FemuCtrl *n = ((NvmePollerThreadArgument *)arg)->n;
     int index = ((NvmePollerThreadArgument *)arg)->index;
+    int num_io_queues_per_poller = n->num_io_queues / n->num_poller;
+    int remaining_io_queues = n->num_io_queues % n->num_poller;
+    int processed_io_queues = n->num_io_queues - remaining_io_queues;
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
@@ -135,11 +138,22 @@ static void *nvme_poller(void *arg)
                     continue;
                 }
 
-                NvmeSQueue *sq = n->sq[index];
-                NvmeCQueue *cq = n->cq[index];
-                if (sq && sq->is_active && cq && cq->is_active) {
-                    nvme_process_sq_io(sq, index);
+                for (int i = 0; i < num_io_queues_per_poller; i++) {
+                    NvmeSQueue *sq = n->sq[index + (i * n->num_poller)];
+                    NvmeCQueue *cq = n->cq[index + (i * n->num_poller)];
+                    if (sq && sq->is_active && cq && cq->is_active) {
+                        nvme_process_sq_io(sq, index);
+                    }
                 }
+
+                if (index <= remaining_io_queues) {
+                    NvmeSQueue *sq = n->sq[processed_io_queues + index];
+                    NvmeCQueue *cq = n->cq[processed_io_queues + index];
+                    if (sq && sq->is_active && cq && cq->is_active) {
+                        nvme_process_sq_io(sq, index);
+                    }
+                }
+                
                 nvme_process_cq_cpl(n, index);
             }
             break;
@@ -195,7 +209,17 @@ void femu_create_nvme_poller(FemuCtrl *n)
 {
     n->should_isr = g_malloc0(sizeof(bool) * (n->num_io_queues + 1));
 
-    n->num_poller = n->multipoller_enabled ? n->num_io_queues : 1;
+//    n->num_poller = n->multipoller_enabled ? n->num_io_queues : 1;
+    if (n->multipoller_enabled) {
+        if (n->num_poller == 0) {
+            n->num_poller = n->num_io_queues;
+        } else if (n->num_poller > n->num_io_queues) {
+            femu_err("Number of pollers must be less than or equal number of queues.\n");
+            abort();
+        }
+    } else {
+        n->num_poller = 1;
+    }
     /* Coperd: we put NvmeRequest into these rings */
     n->to_ftl = malloc(sizeof(struct rte_ring *) * (n->num_poller + 1));
     for (int i = 1; i <= n->num_poller; i++) {
@@ -1170,6 +1194,7 @@ static Property femu_props[] = {
     DEFINE_PROP_UINT32("namespaces", FemuCtrl, num_namespaces, 1),
     DEFINE_PROP_UINT32("queues", FemuCtrl, num_io_queues, 1),
     DEFINE_PROP_UINT32("entries", FemuCtrl, max_q_ents, 0x7ff),
+    DEFINE_PROP_UINT32("num_poller", FemuCtrl, num_poller, 0),
     DEFINE_PROP_UINT8("multipoller_enabled", FemuCtrl, multipoller_enabled, 0),
     DEFINE_PROP_UINT8("max_cqes", FemuCtrl, max_cqes, 0x4),
     DEFINE_PROP_UINT8("max_sqes", FemuCtrl, max_sqes, 0x6),
