@@ -1232,6 +1232,10 @@ typedef struct FemuCtrl {
     struct fs_inode_table   *inode_table;
 
     uint64_t        io_received;
+
+    int num_io_queues_per_poller;
+    int remaining_io_queues;
+    int processed_io_queues;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {

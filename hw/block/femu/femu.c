@@ -103,7 +103,21 @@ static void nvme_process_cq_cpl(void *arg, int index_poller)
 
     switch (n->multipoller_enabled) {
         case 1:
-            nvme_isr_notify_io(n->cq[index_poller]);
+            for (int i = 0; i < n->num_io_queues_per_poller; i++) {
+                int index = index_poller + (i * n->num_poller);
+                if (n->should_isr[index]) {
+                    nvme_isr_notify_io(n->cq[index]);
+                    n->should_isr[index] = false;
+                }
+            }
+            if (index_poller <= n->remaining_io_queues) {
+                int index = n->processed_io_queues + index_poller;
+                if (n->should_isr[index]) {
+                    nvme_isr_notify_io(n->cq[index]);
+                    n->should_isr[index] = false;
+                }
+            }
+
             break;
 
         default:
@@ -121,9 +135,10 @@ static void *nvme_poller(void *arg)
 {
     FemuCtrl *n = ((NvmePollerThreadArgument *)arg)->n;
     int index = ((NvmePollerThreadArgument *)arg)->index;
-    int num_io_queues_per_poller = n->num_io_queues / n->num_poller;
-    int remaining_io_queues = n->num_io_queues % n->num_poller;
-    int processed_io_queues = n->num_io_queues - remaining_io_queues;
+
+    n->num_io_queues_per_poller = n->num_io_queues / n->num_poller;
+    n->remaining_io_queues = n->num_io_queues % n->num_poller;
+    n->processed_io_queues = n->num_io_queues - remaining_io_queues;
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
@@ -138,7 +153,7 @@ static void *nvme_poller(void *arg)
                     continue;
                 }
 
-                for (int i = 0; i < num_io_queues_per_poller; i++) {
+                for (int i = 0; i < n->num_io_queues_per_poller; i++) {
                     NvmeSQueue *sq = n->sq[index + (i * n->num_poller)];
                     NvmeCQueue *cq = n->cq[index + (i * n->num_poller)];
                     if (sq && sq->is_active && cq && cq->is_active) {
@@ -146,14 +161,14 @@ static void *nvme_poller(void *arg)
                     }
                 }
 
-                if (index <= remaining_io_queues) {
-                    NvmeSQueue *sq = n->sq[processed_io_queues + index];
-                    NvmeCQueue *cq = n->cq[processed_io_queues + index];
+                if (index <= n->remaining_io_queues) {
+                    NvmeSQueue *sq = n->sq[n->processed_io_queues + index];
+                    NvmeCQueue *cq = n->cq[n->processed_io_queues + index];
                     if (sq && sq->is_active && cq && cq->is_active) {
                         nvme_process_sq_io(sq, index);
                     }
                 }
-                
+
                 nvme_process_cq_cpl(n, index);
             }
             break;
