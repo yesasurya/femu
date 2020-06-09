@@ -138,7 +138,7 @@ static void *nvme_poller(void *arg)
 
     n->num_io_queues_per_poller = n->num_io_queues / n->num_poller;
     n->remaining_io_queues = n->num_io_queues % n->num_poller;
-    n->processed_io_queues = n->num_io_queues - remaining_io_queues;
+    n->processed_io_queues = n->num_io_queues - n->remaining_io_queues;
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
