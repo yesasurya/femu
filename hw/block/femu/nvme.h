@@ -1236,6 +1236,8 @@ typedef struct FemuCtrl {
     int num_io_queues_per_poller;
     int remaining_io_queues;
     int processed_io_queues;
+
+    bool *should_index_poller_isr;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {

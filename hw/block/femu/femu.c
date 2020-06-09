@@ -101,6 +101,9 @@ static void nvme_process_cq_cpl(void *arg, int index_poller)
     if (processed == 0)
         return;
 
+    if (!n->should_index_poller_isr)
+        return;
+
     switch (n->multipoller_enabled) {
         case 1:
             for (int i = 0; i < n->num_io_queues_per_poller; i++) {
@@ -235,6 +238,11 @@ void femu_create_nvme_poller(FemuCtrl *n)
     } else {
         n->num_poller = 1;
     }
+    n->should_index_poller_isr = malloc(sizeof(bool) * (n->num_poller + 1));
+    for (int i = 1; i <= n->num_poller; i++) {
+        n->should_index_poller_isr[i] = true;
+    }
+
     /* Coperd: we put NvmeRequest into these rings */
     n->to_ftl = malloc(sizeof(struct rte_ring *) * (n->num_poller + 1));
     for (int i = 1; i <= n->num_poller; i++) {
@@ -436,36 +444,43 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
     switch (cmd->opcode) {
         case NVME_CMD_READ:
         case NVME_CMD_WRITE:
+            n->should_index_poller_isr[index_poller] = true;
             if (n->femu_mode == FEMU_BLACKBOX_MODE)
                 return nvme_rw(n, ns, cmd, req);
             else
                 return femu_rw_mem_backend_nossd(n, ns, cmd);
 
         case NVME_CMD_FLUSH:
+            n->should_index_poller_isr[index_poller] = true;
             if (!n->id_ctrl.vwc || !n->features.volatile_wc) {
                 return NVME_SUCCESS;
             }
             return nvme_flush(n, ns, cmd, req);
 
         case NVME_CMD_DSM:
+            n->should_index_poller_isr[index_poller] = true;
+            n->should_index_poller_isr[index_poller] = true;
             if (NVME_ONCS_DSM & n->oncs) {
                 return nvme_dsm(n, ns, cmd, req);
             }
             return NVME_INVALID_OPCODE | NVME_DNR;
 
         case NVME_CMD_COMPARE:
+            n->should_index_poller_isr[index_poller] = true;
             if (NVME_ONCS_COMPARE & n->oncs) {
                 return nvme_compare(n, ns, cmd, req);
             }
             return NVME_INVALID_OPCODE | NVME_DNR;
 
         case NVME_CMD_WRITE_ZEROS:
+            n->should_index_poller_isr[index_poller] = true;
             if (NVME_ONCS_WRITE_ZEROS & n->oncs) {
                 return nvme_write_zeros(n, ns, cmd, req);
             }
             return NVME_INVALID_OPCODE | NVME_DNR;
 
         case NVME_CMD_WRITE_UNCOR:
+            n->should_index_poller_isr[index_poller] = true;
             if (NVME_ONCS_WRITE_UNCORR & n->oncs) {
                 return nvme_write_uncor(n, ns, cmd, req);
             }
@@ -474,23 +489,31 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
         /* Coperd: FEMU OC command handling */
         case FEMU_OC12_CMD_PHYS_READ:
         case FEMU_OC12_CMD_PHYS_WRITE:
+            n->should_index_poller_isr[index_poller] = true;
             return femu_oc12_rw(n, ns, cmd, req);
         case FEMU_OC12_CMD_ERASE_ASYNC:
+            n->should_index_poller_isr[index_poller] = true;
             return femu_oc12_erase_async(n, ns, cmd, req);
 
         /* yesa: NVMe FS command handling */
         case NVME_CMD_FS_OPEN:
+            n->should_index_poller_isr[index_poller] = false;
             return nvme_fs_open(n, ns, cmd, index_poller);
         case NVME_CMD_FS_CLOSE:
+            n->should_index_poller_isr[index_poller] = false;
             return nvme_fs_close(n, ns, cmd);
         case NVME_CMD_FS_READ:
+            n->should_index_poller_isr[index_poller] = false;
             return nvme_fs_read(n, ns, cmd, index_poller, sq_id);
         case NVME_CMD_FS_WRITE:
+            n->should_index_poller_isr[index_poller] = false;
             return nvme_fs_write(n, ns, cmd, index_poller, sq_id);
         case NVME_CMD_FS_LSEEK:
+            n->should_index_poller_isr[index_poller] = false;
             return nvme_fs_lseek(n, ns, cmd);
 
         default:
+            n->should_index_poller_isr[index_poller] = true;
             return NVME_INVALID_OPCODE | NVME_DNR;
         }
 }
