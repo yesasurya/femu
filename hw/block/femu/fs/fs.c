@@ -89,6 +89,7 @@ void fs_init_inode_directory(FemuCtrl *n, uint64_t number) {
     struct fs_inode *inode = &n->inode_table->inodes[number];
     inode->type = FS_INODE_DIRECTORY;
     inode->filename = malloc(n->page_size);
+    inode->number = number;
     inode->num_children_inodes = 0;
     inode->is_used = false;
 }
@@ -119,7 +120,6 @@ int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
         if (!inode->is_used) {
             return inode->number;
         }
-        printf("YESA LOG: Iteration#%d with inode_number = %" PRIu64 " used.\n", i, inode->number);
     }
     return FS_NO_INODE_AVAILABLE;
 }
@@ -178,7 +178,6 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
-    printf("YESA LOG: inode_number = %" PRIu64 "\n", inode_number);
     struct fs_inode *inode = &n->inode_table->inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
