@@ -76,28 +76,28 @@ void fs_init_metadata(FemuCtrl *n) {
 }
 
 void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
-    struct fs_inode inode = n->inode_table->inodes[number];
-    inode.type = FS_INODE_FILE;
-    inode.filename = "";
-    inode.number = number;
-    inode.address = (number - 1) * n->metadata.max_file_size;
-    inode.length = 0;
-    inode.is_used = false;
+    struct fs_inode *inode = &n->inode_table->inodes[number];
+    inode->type = FS_INODE_FILE;
+    inode->filename = "";
+    inode->number = number;
+    inode->address = (number - 1) * n->metadata.max_file_size;
+    inode->length = 0;
+    inode->is_used = false;
 }
 
 void fs_init_inode_directory(FemuCtrl *n, uint64_t number) {
-    struct fs_inode inode = n->inode_table->inodes[number];
-    inode.type = FS_INODE_DIRECTORY;
-    inode.filename = "";
-    inode.num_children_inodes = 0;
-    inode.is_used = false;
+    struct fs_inode *inode = &n->inode_table->inodes[number];
+    inode->type = FS_INODE_DIRECTORY;
+    inode->filename = "";
+    inode->num_children_inodes = 0;
+    inode->is_used = false;
 }
 
 int64_t fs_get_unused_inode_file(FemuCtrl *n) {
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
-        struct fs_inode inode = n->inode_table->inodes[i];
-        if (!inode.is_used) {
-            return inode.number;
+        struct fs_inode *inode = &n->inode_table->inodes[i];
+        if (!inode->is_used) {
+            return inode->number;
         }
     }
     return FS_NO_INODE_FILE_AVAILABLE;
@@ -105,9 +105,9 @@ int64_t fs_get_unused_inode_file(FemuCtrl *n) {
 
 int64_t fs_get_inode_file_by_name(FemuCtrl *n, char *filename) {
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
-        struct fs_inode inode = n->inode_table->inodes[i];
-        if (strcmp(filename, inode.filename)) {
-            return inode.number;
+        struct fs_inode *inode = &n->inode_table->inodes[i];
+        if (strcmp(filename, inode->filename)) {
+            return inode->number;
         }
     }
     return FS_NO_INODE_FILE_FOUND;
@@ -119,9 +119,9 @@ void fs_create_file(FemuCtrl *n, char *filename) {
         printf("YESA LOG: Failed. All inodes have been used.\n");
     } else {
         printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
-        struct fs_inode inode = n->inode_table->inodes[inode_number];
-        inode.filename = filename;
-        inode.is_used = true;
+        struct fs_inode *inode = &n->inode_table->inodes[inode_number];
+        inode->filename = filename;
+        inode->is_used = true;
     }
 }
 
@@ -131,8 +131,8 @@ void fs_delete_file(FemuCtrl *n, char *filename) {
         printf("YESA LOG: Failed. No inode found for specified filename.\n");
     } else {
         printf("YESA LOG: Success. Deleting inode with name = %s\n", filename);
-        struct fs_inode inode = n->inode_table->inodes[inode_number];
-        inode.is_used = false;
+        struct fs_inode *inode = &n->inode_table->inodes[inode_number];
+        inode->is_used = false;
     }
 }
 
