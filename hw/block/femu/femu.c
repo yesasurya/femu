@@ -101,9 +101,22 @@ static void nvme_process_cq_cpl(void *arg, int index_poller)
     if (processed == 0)
         return;
 
-    switch (n->multipoller_enabled) {
+    switch (n->poller.multipoller_enabled) {
         case 1:
-            nvme_isr_notify_io(n->cq[index_poller]);
+            for (int i = 0; i < n->poller.num_least_queues_per_poller; i++) {
+                int index = index_poller + (n->poller.num_poller * i);
+                if (n->should_isr[index]) {
+                    nvme_isr_notify_io(n->cq[index]);
+                    n->should_isr[index] = false;
+                }
+            }
+            if (index_poller <= n->poller.num_remaining_queues) {
+                int index = index_poller + (n->poller.num_poller * n->poller.num_least_queues_per_poller);
+                if (n->should_isr[index]) {
+                    nvme_isr_notify_io(n->cq[index]);
+                    n->should_isr[index] = false;
+                }
+            }
             break;
 
         default:
@@ -122,7 +135,7 @@ static void *nvme_poller(void *arg)
     FemuCtrl *n = ((NvmePollerThreadArgument *)arg)->n;
     int index = ((NvmePollerThreadArgument *)arg)->index;
 
-    switch (n->multipoller_enabled) {
+    switch (n->poller.multipoller_enabled) {
         case 1:
             while (1) {
                 if ((!n->dataplane_started)) {
@@ -130,10 +143,19 @@ static void *nvme_poller(void *arg)
                     continue;
                 }
 
-                NvmeSQueue *sq = n->sq[index];
-                NvmeCQueue *cq = n->cq[index];
-                if (sq && sq->is_active && cq && cq->is_active) {
-                    nvme_process_sq_io(sq, index);
+                for (int i = 0; i < n->poller.num_least_queues_per_poller; i++) {
+                    NvmeSQueue *sq = n->sq[index + (n->poller.num_poller * i)];
+                    NvmeCQueue *cq = n->cq[index + (n->poller.num_poller * i)];
+                    if (sq && sq->is_active && cq && cq->is_active) {
+                        nvme_process_sq_io(sq, index);
+                    }
+                }
+                if (index <= n->poller.num_remaining_queues) {
+                    NvmeSQueue *sq = n->sq[index + (n->poller.num_poller * n->poller.num_least_queues_per_poller)];
+                    NvmeCQueue *cq = n->cq[index + (n->poller.num_poller * n->poller.num_least_queues_per_poller)];
+                    if (sq && sq->is_active && cq && cq->is_active) {
+                        nvme_process_sq_io(sq, index);
+                    }
                 }
                 nvme_process_cq_cpl(n, index);
             }
@@ -188,12 +210,25 @@ static void set_pos(void *a, size_t pos)
 
 void femu_create_nvme_poller(FemuCtrl *n)
 {
+    n->poller.num_poller = n->num_poller;
+    n->poller.multipoller_enabled = n->multipoller_enabled;
+
     n->should_isr = g_malloc0(sizeof(bool) * (n->num_io_queues + 1));
 
-    n->num_poller = n->multipoller_enabled ? n->num_io_queues : 1;
+    if (n->poller.multipoller_enabled) {
+        if (n->poller.num_poller == 0) {
+            n->poller.num_poller = n->num_io_queues;
+        } else if (n->poller.num_poller > n->num_io_queues) {
+            femu_err("Number of pollers must be less than or equal number of queues.\n");
+            abort();
+        }
+    } else {
+        n->poller.num_poller = 1;
+    }
+
     /* Coperd: we put NvmeRequest into these rings */
-    n->to_ftl = malloc(sizeof(struct rte_ring *) * (n->num_poller + 1));
-    for (int i = 1; i <= n->num_poller; i++) {
+    n->to_ftl = malloc(sizeof(struct rte_ring *) * (n->poller.num_poller + 1));
+    for (int i = 1; i <= n->poller.num_poller; i++) {
         n->to_ftl[i] = femu_ring_create(FEMU_RING_TYPE_MP_SC, FEMU_MAX_INF_REQS);
         if (!n->to_ftl[i]) {
             femu_err("failed to create ring (n->to_ftl) ...\n");
@@ -201,13 +236,14 @@ void femu_create_nvme_poller(FemuCtrl *n)
         }
         assert(rte_ring_empty(n->to_ftl[i]));
     }
+
 #if 1
     n->ssd.to_ftl = n->to_ftl;
     femu_debug("ssd->to_ftl=%p, n->to_ftl=%p\n", n->ssd.to_ftl, n->to_ftl);
 #endif
 
-    n->to_poller = malloc(sizeof(struct rte_ring *) * (n->num_poller + 1));
-    for (int i = 1; i <= n->num_poller; i++) {
+    n->to_poller = malloc(sizeof(struct rte_ring *) * (n->poller.num_poller + 1));
+    for (int i = 1; i <= n->poller.num_poller; i++) {
         n->to_poller[i] = femu_ring_create(FEMU_RING_TYPE_MP_SC, FEMU_MAX_INF_REQS);
         if (!n->to_poller[i]) {
             femu_err("failed to create ring (n->to_poller) ...\n");
@@ -215,13 +251,14 @@ void femu_create_nvme_poller(FemuCtrl *n)
         }
         assert(rte_ring_empty(n->to_poller[i]));
     }
+
 #if 1
     n->ssd.to_poller = n->to_poller;
     femu_debug("ssd->to_poller=%p, n->to_poller=%p\n", n->ssd.to_poller, n->to_poller);
 #endif
 
-    n->pq = malloc(sizeof(pqueue_t *) * (n->num_poller + 1));
-    for (int i = 1; i <= n->num_poller; i++) {
+    n->pq = malloc(sizeof(pqueue_t *) * (n->poller.num_poller + 1));
+    for (int i = 1; i <= n->poller.num_poller; i++) {
         n->pq[i] = pqueue_init(FEMU_MAX_INF_REQS, cmp_pri, get_pri, set_pri, get_pos, set_pos);
         if (!n->pq[i]) {
             femu_err("failed to create pqueue (n->pq) ...\n");
@@ -229,12 +266,14 @@ void femu_create_nvme_poller(FemuCtrl *n)
         }
     }
 
-    n->poller = malloc(sizeof(QemuThread) * (n->num_poller + 1));
-    NvmePollerThreadArgument *args = malloc(sizeof(NvmePollerThreadArgument) * (n->num_poller + 1));
-    for (int i = 1; i <= n->num_poller; i++) {
+    n->poller.num_least_queues_per_poller = n->num_io_queues / n->poller.num_poller;
+    n->poller.num_remaining_queues = n->num_io_queues % n->poller.num_poller;
+    n->poller.poller_thread = malloc(sizeof(QemuThread) * (n->poller.num_poller + 1));
+    NvmePollerThreadArgument *args = malloc(sizeof(NvmePollerThreadArgument) * (n->poller.num_poller + 1));
+    for (int i = 1; i <= n->poller.num_poller; i++) {
         args[i].n = n;
         args[i].index = i;
-        qemu_thread_create(&n->poller[i], "nvme-poller", nvme_poller, &args[i], QEMU_THREAD_JOINABLE);
+        qemu_thread_create(&n->poller.poller_thread[i], "nvme-poller", nvme_poller, &args[i], QEMU_THREAD_JOINABLE);
         femu_debug("nvme-poller created ...\n");
     }
 }
@@ -242,10 +281,10 @@ void femu_create_nvme_poller(FemuCtrl *n)
 static void femu_destroy_nvme_poller(FemuCtrl *n)
 {
     femu_debug("destroying NVMe poller !!\n");
-    for (int i = 1; i <= n->num_poller; i++) {
-        qemu_thread_join(&n->poller[i]);
+    for (int i = 1; i <= n->poller.num_poller; i++) {
+        qemu_thread_join(&n->poller.poller_thread[i]);
     }
-    for (int i = 1; i <= n->num_poller; i++) {
+    for (int i = 1; i <= n->poller.num_poller; i++) {
         pqueue_free(n->pq[i]);
         femu_ring_free(n->to_poller[i]);
         femu_ring_free(n->to_ftl[i]);
@@ -1148,6 +1187,7 @@ static Property femu_props[] = {
     DEFINE_PROP_UINT32("namespaces", FemuCtrl, num_namespaces, 1),
     DEFINE_PROP_UINT32("queues", FemuCtrl, num_io_queues, 1),
     DEFINE_PROP_UINT32("entries", FemuCtrl, max_q_ents, 0x7ff),
+    DEFINE_PROP_UINT32("num_poller", FemuCtrl, num_poller, 0),
     DEFINE_PROP_UINT8("multipoller_enabled", FemuCtrl, multipoller_enabled, 0),
     DEFINE_PROP_UINT8("max_cqes", FemuCtrl, max_cqes, 0x4),
     DEFINE_PROP_UINT8("max_sqes", FemuCtrl, max_sqes, 0x6),
