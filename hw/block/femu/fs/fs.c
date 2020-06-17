@@ -211,11 +211,11 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
     printf("YESA LOG: fs_create_directory\n");
     char delimiter[2] = "/";
     int depth = 0;
-    n->utils.buffer_prp1[depth] = strtok(filename, delimiter);
-    while (n->utils.buffer_prp1[depth]) {
+    n->utils.buffer_tokens[depth] = strtok(filename, delimiter);
+    while (n->utils.buffer_tokens[depth]) {
         printf("YESA LOG: depth %d passed.\n", depth);
         depth++;
-        n->utils.buffer_prp1[depth] = strtok(NULL, delimiter);
+        n->utils.buffer_tokens[depth] = strtok(NULL, delimiter);
     }
 
     printf("YESA LOG: depth = %d\n", depth);
@@ -226,8 +226,8 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 
     struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
-        printf("YESA LOG: creating for depth = %d with filename = %s\n", i, n->utils.buffer_prp1[i]);
-        parent_inode = _fs_create_directory(n, n->utils.buffer_prp1[i], parent_inode);
+        printf("YESA LOG: creating for depth = %d with filename = %s\n", i, n->utils.buffer_tokens[i]);
+        parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[i], parent_inode);
     }
 }
 
