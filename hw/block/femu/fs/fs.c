@@ -175,26 +175,6 @@ void fs_delete_file(FemuCtrl *n, char *filename) {
     n->inode_table.num_used_inode_file--;
 }
 
-void fs_create_directory(FemuCtrl *n, char *filename) {
-    char delimiter[2] = "/";
-    int depth = 0;
-    n->utils.buffer_prp1[depth] = strtok(filename, delimiter);
-    while (n->utils.buffer_prp1[depth]) {
-        depth++;
-        n->utils.buffer_prp1[depth] = strtok(NULL, delimiter);
-    }
-
-    if (depth > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
-        printf("YESA LOG: Failed. Free inodes are not enough.\n");
-        return;
-    }
-
-    struct fs_inode *parent_inode;
-    for (int i = 0; i < depth; i++) {
-        parent_inode = _fs_create_directory(n, n->utils.buffer_prp1[i], parent_inode);
-    }
-}
-
 struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
     uint64_t inode_number = fs_get_inode_directory_by_name(n, filename);
     if (inode_number != FS_NO_INODE_FOUND) {
@@ -221,6 +201,26 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
     n->inode_table.num_used_inode_directory++;
 
     return inode;
+}
+
+void fs_create_directory(FemuCtrl *n, char *filename) {
+    char delimiter[2] = "/";
+    int depth = 0;
+    n->utils.buffer_prp1[depth] = strtok(filename, delimiter);
+    while (n->utils.buffer_prp1[depth]) {
+        depth++;
+        n->utils.buffer_prp1[depth] = strtok(NULL, delimiter);
+    }
+
+    if (depth > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
+        printf("YESA LOG: Failed. Free inodes are not enough.\n");
+        return;
+    }
+
+    struct fs_inode *parent_inode;
+    for (int i = 0; i < depth; i++) {
+        parent_inode = _fs_create_directory(n, n->utils.buffer_prp1[i], parent_inode);
+    }
 }
 
 void fs_delete_directory(FemuCtrl *n, char *filename) {
