@@ -188,18 +188,14 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
-    printf("YESA LOG: inode_number = %" PRIu64 "\n", inode_number);
     struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
     inode->parent_inode = parent_inode;
     inode->is_used = true;
 
-    printf("YESA LOG: Done setting up current inode.\n");
     if (parent_inode) {
-        printf("YESA LOG: Start setting up parent inode.\n");
         parent_inode->num_children_inodes++;
         parent_inode->children_inodes[parent_inode->num_children_inodes] = inode;
-        printf("YESA LOG: Done setting up parent inode.\n");
     }
 
     n->inode_table.num_used_inode_directory++;
@@ -208,17 +204,14 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
 }
 
 void fs_create_directory(FemuCtrl *n, char *filename) {
-    printf("YESA LOG: fs_create_directory\n");
     char delimiter[2] = "/";
     int depth = 0;
     n->utils.buffer_tokens[depth] = strtok(filename, delimiter);
     while (n->utils.buffer_tokens[depth]) {
-        printf("YESA LOG: depth %d passed.\n", depth);
         depth++;
         n->utils.buffer_tokens[depth] = strtok(NULL, delimiter);
     }
 
-    printf("YESA LOG: depth = %d\n", depth);
     if (depth > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
         printf("YESA LOG: Failed. Free inodes are not enough.\n");
         return;
@@ -226,7 +219,6 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 
     struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
-        printf("YESA LOG: creating for depth = %d with filename = %s\n", i, n->utils.buffer_tokens[i]);
         parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[i], parent_inode);
     }
 }
@@ -342,15 +334,10 @@ uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
 }
 
 uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
-    printf("YESA LOG: nvme_fs_create_directory\n");
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-    printf("YESA LOG: Start address_space_rw with index_poller = %" PRIu64 "\n", index_poller);
-    printf("YESA LOG: Current content of n->utils.buffer_prp1[%" PRIu64 "] = %s\n", index_poller, n->utils.buffer_prp1[index_poller]);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
-    printf("YESA LOG: Done address_space_rw\n");
     fs_create_directory(n, n->utils.buffer_prp1[index_poller]);
-    printf("YESA LOG: Done fs_create_directory\n");
 
     return NVME_SUCCESS;
 }
