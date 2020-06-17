@@ -22,7 +22,7 @@ struct fs_inode {
     size_t length;
 
     uint64_t num_children_inodes;
-    struct fs_inode *children_inodes;
+    struct fs_inode **children_inodes;
 };
 
 struct fs_inode_table {
@@ -46,6 +46,11 @@ struct fs_metadata {
     uint64_t max_file_total;
     uint64_t max_file_size;
     uint64_t max_directory_total;
+};
+
+struct fs_utils {
+    char **buffer_prp1;
+    char **buffer_tokens;
 };
 
 #endif

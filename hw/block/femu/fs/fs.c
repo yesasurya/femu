@@ -75,8 +75,17 @@ void fs_init_metadata(FemuCtrl *n) {
     n->metadata.max_directory_total = 100 * n->metadata.max_file_total;
 }
 
+void fs_init_utils(FemuCtrl *n) {
+    n->utils.buffer_prp1 = malloc(sizeof(char *) * (n->num_poller + 1));
+    for (int i = 1; i <= n->num_poller; i++) {
+        n->utils.buffer_prp1[i] = malloc(n->page_size);
+    }
+
+    n->utils.buffer_tokens = malloc(sizeof(char *) * (n->metadata.max_directory_total + 1));
+}
+
 void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
-    struct fs_inode *inode = &n->inode_table->inodes[number];
+    struct fs_inode *inode = &n->inode_table.inodes[number];
     inode->type = FS_INODE_FILE;
     inode->filename = malloc(n->page_size);
     inode->number = number;
@@ -86,17 +95,18 @@ void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
 }
 
 void fs_init_inode_directory(FemuCtrl *n, uint64_t number) {
-    struct fs_inode *inode = &n->inode_table->inodes[number];
+    struct fs_inode *inode = &n->inode_table.inodes[number];
     inode->type = FS_INODE_DIRECTORY;
     inode->filename = malloc(n->page_size);
     inode->number = number;
     inode->num_children_inodes = 0;
+    inode->children_inodes = malloc(sizeof(struct fs_inode*) * (n->metadata.max_directory_total + 1));
     inode->is_used = false;
 }
 
 int64_t fs_get_unused_inode_file(FemuCtrl *n) {
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
-        struct fs_inode *inode = &n->inode_table->inodes[i];
+        struct fs_inode *inode = &n->inode_table.inodes[i];
         if (!inode->is_used) {
             return inode->number;
         }
@@ -106,7 +116,7 @@ int64_t fs_get_unused_inode_file(FemuCtrl *n) {
 
 int64_t fs_get_inode_file_by_name(FemuCtrl *n, char *filename) {
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
-        struct fs_inode *inode = &n->inode_table->inodes[i];
+        struct fs_inode *inode = &n->inode_table.inodes[i];
         if (strcmp(filename, inode->filename) == 0) {
             return inode->number;
         }
@@ -116,7 +126,7 @@ int64_t fs_get_inode_file_by_name(FemuCtrl *n, char *filename) {
 
 int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
-        struct fs_inode *inode = &n->inode_table->inodes[i];
+        struct fs_inode *inode = &n->inode_table.inodes[i];
         if (!inode->is_used) {
             return inode->number;
         }
@@ -126,7 +136,7 @@ int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
 
 int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename) {
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
-        struct fs_inode *inode = &n->inode_table->inodes[i];
+        struct fs_inode *inode = &n->inode_table.inodes[i];
         if (strcmp(filename, inode->filename) == 0) {
             return inode->number;
         }
@@ -147,10 +157,10 @@ void fs_create_file(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
-    struct fs_inode *inode = &n->inode_table->inodes[inode_number];
+    struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
-    n->inode_table->num_used_inode_file++;
+    n->inode_table.num_used_inode_file++;
 }
 
 void fs_delete_file(FemuCtrl *n, char *filename) {
@@ -160,12 +170,32 @@ void fs_delete_file(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Deleting inode with name = %s\n", filename);
-    struct fs_inode *inode = &n->inode_table->inodes[inode_number];
+    struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     inode->is_used = false;
-    n->inode_table->num_used_inode_file--;
+    n->inode_table.num_used_inode_file--;
 }
 
 void fs_create_directory(FemuCtrl *n, char *filename) {
+    char delimiter[2] = "/";
+    int depth = 0;
+    n->utils.buffer_prp1[depth] = strtok(filename, delimiter);
+    while (n->utils.buffer_prp1[depth]) {
+        depth++;
+        n->utils.buffer_prp1[depth] = strtok(NULL, delimiter);
+    }
+
+    if (depth > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
+        printf("YESA LOG: Failed. Free inodes are not enough.\n");
+        return;
+    }
+
+    struct fs_inode *parent_inode;
+    for (int i = 0; i < depth; i++) {
+        parent_inode = _fs_create_directory(n, n->utils.buffer_prp1[i], parent_inode);
+    }
+}
+
+struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
     uint64_t inode_number = fs_get_inode_directory_by_name(n, filename);
     if (inode_number != FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. Directory already exists.\n");
@@ -178,10 +208,19 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
-    struct fs_inode *inode = &n->inode_table->inodes[inode_number];
+    struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
+    inode->parent_inode = parent_inode;
     inode->is_used = true;
-    n->inode_table->num_used_inode_directory++;
+
+    if (parent_inode) {
+        parent_inode->num_children_inodes++;
+        parent_inode->children_inodes[parent_inode->num_children_inodes] = inode;
+    }
+
+    n->inode_table.num_used_inode_directory++;
+
+    return inode;
 }
 
 void fs_delete_directory(FemuCtrl *n, char *filename) {
@@ -191,17 +230,16 @@ void fs_delete_directory(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Deleting inode with name = %s\n", filename);
-    struct fs_inode *inode = &n->inode_table->inodes[inode_number];
+    struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     inode->is_used = false;
-    n->inode_table->num_used_inode_directory--;
+    n->inode_table.num_used_inode_directory--;
 }
 
 void fs_init_inode_table(FemuCtrl *n) {
-    n->inode_table = malloc(sizeof(struct fs_inode_table));
-    n->inode_table->num_used_inode_file = 0;
-    n->inode_table->num_used_inode_directory = 0;
-    n->inode_table->inodes = malloc(sizeof(struct fs_inode) * (n->metadata.max_file_total + n->metadata.max_directory_total + 1));
-    if (n->inode_table->inodes == NULL) {
+    n->inode_table.num_used_inode_file = 0;
+    n->inode_table.num_used_inode_directory = 0;
+    n->inode_table.inodes = malloc(sizeof(struct fs_inode) * (n->metadata.max_file_total + n->metadata.max_directory_total + 1));
+    if (n->inode_table.inodes == NULL) {
         printf("YESA LOG: Inode table allocation failed\n");
         abort();
     } else {
@@ -227,11 +265,7 @@ void fs_read_metadata(FemuCtrl *n) {
 void fs_init(FemuCtrl *n) {
     fs_init_metadata(n);
     fs_init_inode_table(n);
-
-    n->per_poller_buffer = malloc(sizeof(char *) * (n->num_poller + 1));
-    for (int i = 1; i <= n->num_poller; i++) {
-        n->per_poller_buffer[i] = malloc(n->page_size);
-    }
+    fs_init_utils(n);
 }
 
 uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
@@ -284,8 +318,8 @@ uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
 uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->per_poller_buffer[index_poller], n->page_size, false);
-    fs_create_file(n, n->per_poller_buffer[index_poller]);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
+    fs_create_file(n, n->utils.buffer_prp1[index_poller]);
 
     return NVME_SUCCESS;
 }
@@ -293,8 +327,8 @@ uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
 uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->per_poller_buffer[index_poller], n->page_size, false);
-    fs_delete_file(n, n->per_poller_buffer[index_poller]);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
+    fs_delete_file(n, n->utils.buffer_prp1[index_poller]);
 
     return NVME_SUCCESS;
 }
@@ -302,8 +336,8 @@ uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
 uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->per_poller_buffer[index_poller], n->page_size, false);
-    fs_create_directory(n, n->per_poller_buffer[index_poller]);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
+    fs_create_directory(n, n->utils.buffer_prp1[index_poller]);
 
     return NVME_SUCCESS;
 }
@@ -311,8 +345,8 @@ uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
 uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->per_poller_buffer[index_poller], n->page_size, false);
-    fs_delete_directory(n, n->per_poller_buffer[index_poller]);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
+    fs_delete_directory(n, n->utils.buffer_prp1[index_poller]);
 
     return NVME_SUCCESS;
 }
@@ -320,16 +354,16 @@ uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
 uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: FS Visualization\n");
     printf("YESA LOG: INODE TABLE\n");
-    printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table->num_used_inode_file, n->metadata.max_file_total);
-    printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table->num_used_inode_directory, n->metadata.max_directory_total);
+    printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
+    printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_directory, n->metadata.max_directory_total);
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
-        struct fs_inode *inode = &n->inode_table->inodes[i];
+        struct fs_inode *inode = &n->inode_table.inodes[i];
         if (inode->is_used) {
             printf("YESA LOG: (%" PRIu64 ", %s)\n", inode->number, inode->filename);
         }
     }
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
-        struct fs_inode *inode = &n->inode_table->inodes[i];
+        struct fs_inode *inode = &n->inode_table.inodes[i];
         if (inode->is_used) {
             printf("YESA LOG: (%" PRIu64 ", %s)\n", inode->number, inode->filename);
         }

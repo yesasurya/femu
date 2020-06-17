@@ -1244,10 +1244,10 @@ typedef struct FemuCtrl {
      */
     uint32_t                max_file_total;
     uint32_t                max_file_size;
-    char                    **per_poller_buffer;
+    struct fs_utils         utils;
     struct fs_metadata      metadata;
-    struct fs_inode_table   *inode_table;
-    struct fs_file_table    *file_table;
+    struct fs_inode_table   inode_table;
+    struct fs_file_table    file_table;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {
