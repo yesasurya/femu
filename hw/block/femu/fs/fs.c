@@ -342,10 +342,13 @@ uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
 }
 
 uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    printf("YESA LOG: nvme_fs_create_directory\n");
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
+    printf("YESA LOG: Done address_space_rw\n");
     fs_create_directory(n, n->utils.buffer_prp1[index_poller]);
+    printf("YESA LOG: Done fs_create_directory\n");
 
     return NVME_SUCCESS;
 }
