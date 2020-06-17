@@ -106,7 +106,7 @@ int64_t fs_get_unused_inode_file(FemuCtrl *n) {
 int64_t fs_get_inode_file_by_name(FemuCtrl *n, char *filename) {
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
         struct fs_inode *inode = &n->inode_table->inodes[i];
-        if (strcmp(filename, inode->filename)) {
+        if (strcmp(filename, inode->filename) == 0) {
             return inode->number;
         }
     }
