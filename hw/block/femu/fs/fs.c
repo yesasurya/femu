@@ -77,7 +77,7 @@ void fs_init_metadata(FemuCtrl *n) {
 
 void fs_init_utils(FemuCtrl *n) {
     n->utils.buffer_prp1 = malloc(sizeof(char *) * (n->num_poller + 1));
-    for (int i = 1; i <= n->num_poller; i++) {
+    for (int i = 0; i <= n->num_poller; i++) {
         n->utils.buffer_prp1[i] = malloc(n->page_size);
     }
 
@@ -346,6 +346,7 @@ uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
     printf("YESA LOG: Start address_space_rw with index_poller = %" PRIu64 "\n", index_poller);
+    printf("YESA LOG: Current content of n->utils.buffer_prp1[%" PRIu64 "] = %s\n", index_poller, n->utils.buffer_prp1[index_poller]);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
     printf("YESA LOG: Done address_space_rw\n");
     fs_create_directory(n, n->utils.buffer_prp1[index_poller]);
