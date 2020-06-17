@@ -3,8 +3,8 @@
 
 #include "qemu/osdep.h"
 
-#define FS_NO_INODE_FILE_FOUND -1
-#define FS_NO_INODE_FILE_AVAILABLE -1
+#define FS_NO_INODE_FOUND -1
+#define FS_NO_INODE_AVAILABLE -1
 
 enum fs_inode_type {
     FS_INODE_FILE = 0,
