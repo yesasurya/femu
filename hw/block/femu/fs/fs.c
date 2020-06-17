@@ -119,6 +119,7 @@ int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
         if (!inode->is_used) {
             return inode->number;
         }
+        printf("YESA LOG: Iteration#%d with inode_number = %" PRIu64 " used.\n", i, inode->number);
     }
     return FS_NO_INODE_AVAILABLE;
 }
@@ -177,6 +178,7 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
+    printf("YESA LOG: inode_number = %" PRIu64 "\n", inode_number);
     struct fs_inode *inode = &n->inode_table->inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
@@ -199,14 +201,15 @@ void fs_init_inode_table(FemuCtrl *n) {
     n->inode_table = malloc(sizeof(struct fs_inode_table));
     n->inode_table->num_used_inode_file = 0;
     n->inode_table->num_used_inode_directory = 0;
-    n->inode_table->inodes = malloc(sizeof(struct fs_inode) * (n->metadata.max_file_total + n->metadata.max_directory_total + 1 ));
+    n->inode_table->inodes = malloc(sizeof(struct fs_inode) * (n->metadata.max_file_total + n->metadata.max_directory_total + 1));
     if (n->inode_table->inodes == NULL) {
         printf("YESA LOG: Inode table allocation failed\n");
         abort();
     } else {
         printf("YESA LOG: Inode table allocation success.\n");
         printf("YESA LOG: Max file total in FS = %" PRIu64 "\n", n->metadata.max_file_total);
-        printf("YESA LOG: Max file size in FS  = %" PRIu64 "\n", n->metadata.max_file_size);
+        printf("YESA LOG: Max file size in FS = %" PRIu64 "\n", n->metadata.max_file_size);
+        printf("YESA LOG: Max directory total in FS = %" PRIu64 "\n", n->metadata.max_directory_total);
     }
 
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
