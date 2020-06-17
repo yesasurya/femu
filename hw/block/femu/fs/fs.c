@@ -297,6 +297,24 @@ uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     return NVME_SUCCESS;
 }
 
+uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
+    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->per_poller_buffer[index_poller], n->page_size, false);
+    fs_create_directory(n, n->per_poller_buffer[index_poller]);
+
+    return NVME_SUCCESS;
+}
+
+uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
+    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
+    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->per_poller_buffer[index_poller], n->page_size, false);
+    fs_delete_directory(n, n->per_poller_buffer[index_poller]);
+
+    return NVME_SUCCESS;
+}
+
 uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: FS Visualization\n");
     printf("YESA LOG: INODE TABLE\n");

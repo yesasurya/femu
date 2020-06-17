@@ -282,6 +282,8 @@ enum NvmeIoCommands {
     NVME_CMD_FS_CREATE_FILE     = 0xfa,
     NVME_CMD_FS_DELETE_FILE     = 0xf9,
     NVME_CMD_FS_VISUALIZE       = 0xf8,
+    NVME_CMD_FS_CREATE_DIR      = 0xf7,
+    NVME_CMD_FS_DELETE_DIR      = 0xf6,
 };
 
 typedef struct NvmeDeleteQ {
@@ -1279,6 +1281,8 @@ extern uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int 
 extern uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
 extern uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
 extern uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
+extern uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
+extern uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
 extern uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
 
 static inline bool OCSSD(FemuCtrl *n)

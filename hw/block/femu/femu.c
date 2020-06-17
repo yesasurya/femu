@@ -516,6 +516,10 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
             return nvme_fs_create_file(n, cmd, index_poller);
         case NVME_CMD_FS_DELETE_FILE:
             return nvme_fs_delete_file(n, cmd, index_poller);
+        case NVME_CMD_FS_CREATE_DIR:
+            return nvme_fs_create_directory(n, cmd, index_poller);
+        case NVME_CMD_FS_DELETE_DIR:
+            return nvme_fs_delete_directory(n, cmd, index_poller);
         case NVME_CMD_FS_VISUALIZE:
             return nvme_fs_visualize(n, cmd, index_poller);
 
