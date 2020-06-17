@@ -1107,6 +1107,18 @@ typedef struct NvmeNamespace {
 #define TYPE_NVME "femu"
 #define FEMU(obj) OBJECT_CHECK(FemuCtrl, (obj), TYPE_NVME)
 
+typedef struct NvmePollerThread {
+    QemuThread      *poller_thread;
+    uint8_t         multipoller_enabled;
+    uint32_t        num_poller;
+
+    /* yesa:    Each poller will be responsible for at least 'num_least_queues_per_poller' queues.
+                The remaining queues will be distributed evenly to some first pollers.
+     */
+    uint32_t        num_least_queues_per_poller;
+    uint32_t        num_remaining_queues;
+} NvmePollerThread;
+
 typedef struct FemuCtrl {
     PCIDevice    parent_obj;
     MemoryRegion iomem;
@@ -1160,7 +1172,6 @@ typedef struct FemuCtrl {
     uint32_t    cmbloc;
     uint8_t     *cmbuf;
 
-    QemuThread  *poller;
     bool        dataplane_started;
     bool        vector_poll_started;
 
@@ -1202,8 +1213,10 @@ typedef struct FemuCtrl {
     int64_t         nr_tt_late_ios;
     bool            print_log;
 
-    uint8_t         multipoller_enabled;
+    NvmePollerThread    poller;
+
     uint32_t        num_poller;
+    uint8_t         multipoller_enabled;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {
