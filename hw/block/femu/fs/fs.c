@@ -177,7 +177,6 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
-    printf("YEAS LOG: inode_number = %" PRIu64 "\n", inode_number);
     struct fs_inode *inode = &n->inode_table->inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
@@ -322,9 +321,15 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table->num_used_inode_file, n->metadata.max_file_total);
     printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table->num_used_inode_directory, n->metadata.max_directory_total);
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
-        struct fs_inode inode = n->inode_table->inodes[i];
-        if (inode.is_used) {
-            printf("YESA LOG: (%" PRIu64 ", %s)\n", inode.number, inode.filename);
+        struct fs_inode *inode = &n->inode_table->inodes[i];
+        if (inode->is_used) {
+            printf("YESA LOG: (%" PRIu64 ", %s)\n", inode->number, inode->filename);
+        }
+    }
+    for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
+        struct fs_inode *inode = &n->inode_table->inodes[i];
+        if (inode->is_used) {
+            printf("YESA LOG: (%" PRIu64 ", %s)\n", inode->number, inode->filename);
         }
     }
 
