@@ -127,7 +127,7 @@ void fs_create_file(FemuCtrl *n, char *filename) {
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
     struct fs_inode *inode = &n->inode_table->inodes[inode_number];
-    inode->filename = filename;
+    memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
     n->inode_table->num_used_inode_file++;
 }
