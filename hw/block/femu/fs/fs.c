@@ -34,7 +34,7 @@ uint64_t fs_get_unused_inode_index(struct fs_inode_table *inode_table) {
 }
 
 void fs_init_inode(FemuCtrl *n, uint64_t number) {
-    fs_inode inode = n->inode_table->inodes[number];
+    struct fs_inode inode = n->inode_table->inodes[number];
     inode.type = FS_INODE_FILE;
     inode.filename = "";
     inode.number = number;
