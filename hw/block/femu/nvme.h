@@ -1229,15 +1229,19 @@ typedef struct FemuCtrl {
     uint8_t         multipoller_enabled;
     uint32_t        num_poller;
 
-    struct fs_inode_table   *inode_table;
-
-    uint64_t        io_received;
-
     int num_io_queues_per_poller;
     int remaining_io_queues;
     int processed_io_queues;
 
     bool *should_index_poller_isr;
+
+    /*yesa: FS-related
+     */
+    uint32_t                max_file_total;
+    uint32_t                max_file_size;
+    struct fs_metadata      metadata;
+    struct fs_inode_table   *inode_table;
+    struct fs_file_table    *file_table;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {

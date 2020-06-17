@@ -1233,6 +1233,8 @@ static Property femu_props[] = {
     DEFINE_PROP_UINT32("queues", FemuCtrl, num_io_queues, 1),
     DEFINE_PROP_UINT32("entries", FemuCtrl, max_q_ents, 0x7ff),
     DEFINE_PROP_UINT32("num_poller", FemuCtrl, num_poller, 0),
+    DEFINE_PROP_UINT32("max_file_total", FemuCtrl, max_file_total, 0),
+    DEFINE_PROP_UINT32("max_file_size_mb", FemuCtrl, max_file, 0),
     DEFINE_PROP_UINT8("multipoller_enabled", FemuCtrl, multipoller_enabled, 0),
     DEFINE_PROP_UINT8("max_cqes", FemuCtrl, max_cqes, 0x4),
     DEFINE_PROP_UINT8("max_sqes", FemuCtrl, max_sqes, 0x6),
