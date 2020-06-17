@@ -78,7 +78,7 @@ void fs_init_metadata(FemuCtrl *n) {
 void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
     struct fs_inode *inode = &n->inode_table->inodes[number];
     inode->type = FS_INODE_FILE;
-    inode->filename = "";
+    inode->filename = malloc(n->page_size);
     inode->number = number;
     inode->address = (number - 1) * n->metadata.max_file_size;
     inode->length = 0;
@@ -88,7 +88,7 @@ void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
 void fs_init_inode_directory(FemuCtrl *n, uint64_t number) {
     struct fs_inode *inode = &n->inode_table->inodes[number];
     inode->type = FS_INODE_DIRECTORY;
-    inode->filename = "";
+    inode->filename = malloc(n->page_size);
     inode->num_children_inodes = 0;
     inode->is_used = false;
 }
