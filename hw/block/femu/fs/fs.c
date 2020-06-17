@@ -188,15 +188,12 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
-    printf("YESA LOG: inode_number = %" PRIu64 "\n", inode_number);
     struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
     inode->parent_inode = parent_inode;
     inode->is_used = true;
 
-    printf("YESA LOG: Done setting current inode\n");
     if (parent_inode) {
-        printf("YESA LOG: Setting parent inode\n");
         parent_inode->num_children_inodes++;
         parent_inode->children_inodes[parent_inode->num_children_inodes] = inode;
     }
@@ -215,13 +212,12 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         n->utils.buffer_prp1[depth] = strtok(NULL, delimiter);
     }
 
-    printf("YESA LOG: depth = %d\n", depth);
     if (depth > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
         printf("YESA LOG: Failed. Free inodes are not enough.\n");
         return;
     }
 
-    struct fs_inode *parent_inode;
+    struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
         parent_inode = _fs_create_directory(n, n->utils.buffer_prp1[i], parent_inode);
     }
