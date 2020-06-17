@@ -208,10 +208,12 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
 }
 
 void fs_create_directory(FemuCtrl *n, char *filename) {
+    printf("YESA LOG: fs_create_directory\n");
     char delimiter[2] = "/";
     int depth = 0;
     n->utils.buffer_prp1[depth] = strtok(filename, delimiter);
     while (n->utils.buffer_prp1[depth]) {
+        printf("YESA LOG: depth %d passed.\n", depth);
         depth++;
         n->utils.buffer_prp1[depth] = strtok(NULL, delimiter);
     }
