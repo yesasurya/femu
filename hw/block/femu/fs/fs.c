@@ -177,6 +177,7 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         return;
     }
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
+    printf("YEAS LOG: inode_number = %" PRIu64 "\n", inode_number);
     struct fs_inode *inode = &n->inode_table->inodes[inode_number];
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
@@ -213,8 +214,8 @@ void fs_init_inode_table(FemuCtrl *n) {
         fs_init_inode_file(n, i);
     }
 
-    for (int i = 1; i <= n->metadata.max_directory_total; i++) {
-        fs_init_inode_directory(n, n->metadata.max_file_total + i);
+    for (int i = n->metadata.max_file_total; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
+        fs_init_inode_directory(n, i);
     }
 }
 
