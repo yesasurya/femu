@@ -279,6 +279,9 @@ enum NvmeIoCommands {
     NVME_CMD_FS_READ            = 0xfd,
     NVME_CMD_FS_WRITE           = 0xfc,
     NVME_CMD_FS_LSEEK           = 0xfb,
+    NVME_CMD_FS_CREATE_FILE     = 0xfa,
+    NVME_CMD_FS_DELETE_FILE     = 0xf9,
+    NVME_CMD_FS_VISUALIZE       = 0xf8,
 };
 
 typedef struct NvmeDeleteQ {
@@ -1239,6 +1242,7 @@ typedef struct FemuCtrl {
      */
     uint32_t                max_file_total;
     uint32_t                max_file_size;
+    char                    **per_poller_buffer;
     struct fs_metadata      metadata;
     struct fs_inode_table   *inode_table;
     struct fs_file_table    *file_table;
@@ -1273,6 +1277,9 @@ extern uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
 extern uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller, int sq_id);
 extern uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller, int sq_id);
 extern uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
+extern uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
+extern uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
+extern uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
 
 static inline bool OCSSD(FemuCtrl *n)
 {

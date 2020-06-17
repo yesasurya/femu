@@ -495,7 +495,8 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
             n->should_index_poller_isr[index_poller] = true;
             return femu_oc12_erase_async(n, ns, cmd, req);
 
-        /* yesa: NVMe FS command handling */
+        /* yesa: NVMe FS command handling
+         */
         case NVME_CMD_FS_OPEN:
             n->should_index_poller_isr[index_poller] = false;
             return nvme_fs_open(n, ns, cmd, index_poller);
@@ -511,6 +512,12 @@ static uint16_t nvme_io_cmd(FemuCtrl *n, NvmeCmd *cmd, NvmeRequest *req, int ind
         case NVME_CMD_FS_LSEEK:
             n->should_index_poller_isr[index_poller] = false;
             return nvme_fs_lseek(n, ns, cmd);
+        case NVME_CMD_FS_CREATE_FILE:
+            return nvme_fs_create_file(n, cmd, index_poller);
+        case NVME_CMD_FS_DELETE_FILE:
+            return nvme_fs_delete_file(n, cmd, index_poller);
+        case NVME_CMD_FS_VISUALIZE:
+            return nvme_fs_visualize(n, cmd, index_poller);
 
         default:
             n->should_index_poller_isr[index_poller] = true;
