@@ -211,6 +211,8 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
     inode->parent_inode = parent_inode;
+    inode->num_children_inodes = 0;
+    inode->lowest_index_avail_child_inode = 1;
 
     if (parent_inode) {
         parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode] = inode;
@@ -268,6 +270,10 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
         inode->is_used = false;
 
         struct fs_inode *parent_inode = inode->parent_inode;
+        if (!parent_inode) {
+            return;
+        }
+
         parent_inode->lowest_index_avail_child_inode = 1;
         while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]->is_used) {
             parent_inode->lowest_index_avail_child_inode++;
