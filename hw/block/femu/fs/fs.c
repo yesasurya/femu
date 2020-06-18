@@ -60,6 +60,7 @@ void fs_close_file(struct fs_inode_table *inode_table, uint64_t fd) {
 }
 
 void fs_init_metadata(FemuCtrl *n) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     if (n->max_file_total == 0) {
         if (n->max_file_size == 0) {
             n->max_file_total = 4;
@@ -76,6 +77,7 @@ void fs_init_metadata(FemuCtrl *n) {
 }
 
 void fs_init_utils(FemuCtrl *n) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     n->utils.buffer_prp1 = malloc(sizeof(char *) * (n->num_poller + 1));
     for (int i = 0; i <= n->num_poller; i++) {
         n->utils.buffer_prp1[i] = malloc(n->page_size);
@@ -85,6 +87,7 @@ void fs_init_utils(FemuCtrl *n) {
 }
 
 void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     struct fs_inode *inode = &n->inode_table.inodes[number];
     inode->type = FS_INODE_FILE;
     inode->filename = malloc(n->page_size);
@@ -95,6 +98,7 @@ void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
 }
 
 void fs_init_inode_directory(FemuCtrl *n, uint64_t number) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     struct fs_inode *inode = &n->inode_table.inodes[number];
     inode->type = FS_INODE_DIRECTORY;
     inode->filename = malloc(n->page_size);
@@ -105,6 +109,7 @@ void fs_init_inode_directory(FemuCtrl *n, uint64_t number) {
 }
 
 int64_t fs_get_unused_inode_file(FemuCtrl *n) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
         if (!inode->is_used) {
@@ -115,6 +120,7 @@ int64_t fs_get_unused_inode_file(FemuCtrl *n) {
 }
 
 int64_t fs_get_inode_file_by_name(FemuCtrl *n, char *filename) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     for (int i = 1; i <= n->metadata.max_file_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
         if (strcmp(filename, inode->filename) == 0) {
@@ -125,6 +131,7 @@ int64_t fs_get_inode_file_by_name(FemuCtrl *n, char *filename) {
 }
 
 int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
         if (!inode->is_used) {
@@ -135,6 +142,7 @@ int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
 }
 
 int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     if (parent_inode) {
         for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
             struct fs_inode *inode = &n->inode_table.inodes[i];
@@ -155,6 +163,7 @@ int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_in
 }
 
 void fs_create_file(FemuCtrl *n, char *filename) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     uint64_t inode_number = fs_get_inode_file_by_name(n, filename);
     if (inode_number != FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. File already exists.\n");
@@ -174,6 +183,7 @@ void fs_create_file(FemuCtrl *n, char *filename) {
 }
 
 void fs_delete_file(FemuCtrl *n, char *filename) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     uint64_t inode_number = fs_get_inode_file_by_name(n, filename);
     if (inode_number == FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. File does not exists.\n");
@@ -186,6 +196,7 @@ void fs_delete_file(FemuCtrl *n, char *filename) {
 }
 
 struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     uint64_t inode_number = fs_get_inode_directory_by_name(n, filename, parent_inode);
     if (inode_number != FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. Directory already exists.\n");
@@ -214,6 +225,7 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
 }
 
 void fs_create_directory(FemuCtrl *n, char *filename) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     char delimiter[2] = "/";
     int depth = 0;
     n->utils.buffer_tokens[depth] = strtok(filename, delimiter);
@@ -244,6 +256,7 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 }
 
 void fs_delete_directory(FemuCtrl *n, char *filename) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     uint64_t inode_number = fs_get_inode_directory_by_name(n, filename, NULL);
     if (inode_number == FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. Directory does not exists.\n");
@@ -256,6 +269,7 @@ void fs_delete_directory(FemuCtrl *n, char *filename) {
 }
 
 void fs_init_inode_table(FemuCtrl *n) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     n->inode_table.num_used_inode_file = 0;
     n->inode_table.num_used_inode_directory = 0;
     n->inode_table.inodes = malloc(sizeof(struct fs_inode) * (n->metadata.max_file_total + n->metadata.max_directory_total + 1));
@@ -278,17 +292,15 @@ void fs_init_inode_table(FemuCtrl *n) {
     }
 }
 
-void fs_read_metadata(FemuCtrl *n) {
-    return NVME_SUCCESS;
-}
-
 void fs_init(FemuCtrl *n) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     fs_init_metadata(n);
     fs_init_inode_table(n);
     fs_init_utils(n);
 }
 
 uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
 //    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 //
 //    uint32_t nlb  = le16_to_cpu(fs_cmd->nlb) + 1;
@@ -306,11 +318,13 @@ uint64_t nvme_fs_open(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_po
 }
 
 uint64_t nvme_fs_close(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
 //    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller, int sq_id) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
 //    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 //
 //    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
@@ -321,6 +335,7 @@ uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_po
 }
 
 uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller, int sq_id) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
 //    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 //
 //    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
@@ -331,11 +346,13 @@ uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_p
 }
 
 uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
 //    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     return NVME_SUCCESS;
 }
 
 uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
@@ -345,6 +362,7 @@ uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
 }
 
 uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
@@ -354,6 +372,7 @@ uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
 }
 
 uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
@@ -363,6 +382,7 @@ uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
 }
 
 uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
@@ -372,6 +392,7 @@ uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
 }
 
 uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     for (int i = 0; i < depth; i++) {
         printf("    ");
     }
@@ -386,6 +407,7 @@ uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
 }
 
 uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     printf("YESA LOG: FS Visualization\n");
     printf("YESA LOG: INODE TABLE\n");
     printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
