@@ -244,7 +244,7 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
     int new_directory_required = 0;
     for (int i = 0; i < depth; i++) {
         printf("YESA LOG: A\n");
-        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[depth], NULL);
+        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], NULL);
         if (inode_number == FS_NO_INODE_FOUND) {
             new_directory_required++;
         }
@@ -257,9 +257,9 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
     struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
         printf("YESA LOG: B\n");
-        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[depth], parent_inode);
+        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], parent_inode);
         if (inode_number == FS_NO_INODE_FOUND) {
-            parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[depth], parent_inode);
+            parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[i], parent_inode);
         }
     }
 }
