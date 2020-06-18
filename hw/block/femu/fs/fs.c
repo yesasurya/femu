@@ -186,7 +186,7 @@ void fs_delete_file(FemuCtrl *n, char *filename) {
 }
 
 struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
-    uint64_t inode_number = fs_get_inode_directory_by_name(n, filename);
+    uint64_t inode_number = fs_get_inode_directory_by_name(n, filename, parent_inode);
     if (inode_number != FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. Directory already exists.\n");
         return;
@@ -244,7 +244,7 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 }
 
 void fs_delete_directory(FemuCtrl *n, char *filename) {
-    uint64_t inode_number = fs_get_inode_directory_by_name(n, filename);
+    uint64_t inode_number = fs_get_inode_directory_by_name(n, filename, NULL);
     if (inode_number == FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. Directory does not exists.\n");
         return;
