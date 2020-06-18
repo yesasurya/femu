@@ -233,10 +233,8 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     char delimiter[2] = "/";
     int depth = 0;
-    printf("YESA LOG: filename = %s\n", filename);
     n->utils.buffer_tokens[depth] = strtok(filename, delimiter);
     while (n->utils.buffer_tokens[depth]) {
-        printf("YESA LOG: n->utils.buffer_tokens[%d] = %s\n", depth, n->utils.buffer_tokens[depth]);
         depth++;
         n->utils.buffer_tokens[depth] = strtok(NULL, delimiter);
     }
@@ -295,17 +293,15 @@ void fs_delete_directory(FemuCtrl *n, char *filename) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     char delimiter[2] = "/";
     int depth = 0;
-    printf("YESA LOG: filename = %s\n", filename);
     n->utils.buffer_tokens[depth] = strtok(filename, delimiter);
     while (n->utils.buffer_tokens[depth]) {
-        printf("YESA LOG: n->utils.buffer_tokens[%d] = %s\n", depth, n->utils.buffer_tokens[depth]);
         depth++;
         n->utils.buffer_tokens[depth] = strtok(NULL, delimiter);
     }
 
     struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
-        uint64_t inode_number = fs_get_inode_directory_by_name(n, filename, parent_inode);
+        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], parent_inode);
         if (inode_number == FS_NO_INODE_FOUND) {
             printf("YESA LOG: Failed. Directory does not exists.\n");
             break;
