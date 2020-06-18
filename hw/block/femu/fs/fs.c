@@ -253,6 +253,8 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], parent_inode);
         if (inode_number == FS_NO_INODE_FOUND) {
             parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[i], parent_inode);
+        } else {
+            parent_inode = &n->inode_table.inodes[inode_number];
         }
     }
 }
