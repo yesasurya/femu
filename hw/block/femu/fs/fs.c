@@ -273,6 +273,8 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
             return;
         }
 
+        parent_inode->num_children_inodes--;
+
         parent_inode->lowest_index_avail_child_inode = 1;
         while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]) {
             parent_inode->lowest_index_avail_child_inode++;
