@@ -217,7 +217,7 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
     if (parent_inode) {
         parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode] = inode;
         parent_inode->num_children_inodes++;
-        while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]->is_used) {
+        while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]) {
             parent_inode->lowest_index_avail_child_inode++;
             if (parent_inode->lowest_index_avail_child_inode > parent_inode->max_num_children_inodes) {
                 break;
@@ -276,7 +276,7 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
         }
 
         parent_inode->lowest_index_avail_child_inode = 1;
-        while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]->is_used) {
+        while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]) {
             parent_inode->lowest_index_avail_child_inode++;
         }
         return;
