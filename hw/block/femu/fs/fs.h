@@ -14,13 +14,15 @@ enum fs_inode_type {
 struct fs_inode {
     bool is_used;
 
-    struct fs_inode *parent_inode;
     enum fs_inode_type type;
     char *filename;
     uint64_t number;
     uint64_t address;
     size_t length;
+    struct fs_inode *parent_inode;
 
+    uint64_t lowest_index_avail_child_inode;
+    uint64_t max_num_children_inodes;
     uint64_t num_children_inodes;
     struct fs_inode **children_inodes;
 };
