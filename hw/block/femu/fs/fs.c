@@ -443,7 +443,11 @@ uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
     for (int i = 0; i < depth; i++) {
         printf("    ");
     }
-    printf("(%" PRIu64 ", %s)\n", inode->number, inode->filename);
+    if (inode->parent_inode) {
+        printf("(%" PRIu64 ", %s, child of (%" PRIu64 ", %s))\n", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
+    } else {
+        printf("(%" PRIu64 ", %s, child of UNKNOWN)\n", inode->number, inode->filename);
+    }
     is_checked[inode->number] = true;
     for (int i = 1; i <= inode->num_children_inodes; i++) {
         struct fs_inode *child_inode = inode->children_inodes[i];
