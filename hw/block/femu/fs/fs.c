@@ -216,13 +216,13 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
 
     if (parent_inode) {
         parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode] = inode;
-        parent_inode->num_children_inodes++;
         while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]) {
             parent_inode->lowest_index_avail_child_inode++;
             if (parent_inode->lowest_index_avail_child_inode > parent_inode->max_num_children_inodes) {
                 break;
             }
         }
+        parent_inode->num_children_inodes++;
     }
     n->inode_table.num_used_inode_directory++;
 
@@ -450,6 +450,7 @@ uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
 
 void print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
+    printf("YESA LOG: Displaying (%" PRIu64 ", %s) which has children = %" PRIu64 "\n", inode->number, inode->filename, inode->num_children_inodes);
     for (int i = 0; i < depth; i++) {
         printf("    ");
     }
