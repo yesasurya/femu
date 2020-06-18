@@ -313,7 +313,7 @@ void fs_delete_directory(FemuCtrl *n, char *filename) {
         uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], parent_inode);
         if (inode_number == FS_NO_INODE_FOUND) {
             printf("YESA LOG: Failed. Directory does not exists.\n");
-            break;
+            return;
         }
         parent_inode = &n->inode_table.inodes[inode_number];
     }
@@ -457,7 +457,7 @@ void print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
     if (inode->type == FS_INODE_FILE) {
         return;
     }
-    
+
     for (int i = 1; i <= inode->num_children_inodes; i++) {
         struct fs_inode *child_inode = inode->children_inodes[i];
         if (child_inode && !is_checked[child_inode->number]) {
