@@ -233,8 +233,10 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     char delimiter[2] = "/";
     int depth = 0;
+    printf("YESA LOG: filename = %s\n", filename);
     n->utils.buffer_tokens[depth] = strtok(filename, delimiter);
     while (n->utils.buffer_tokens[depth]) {
+        printf("YESA LOG: n->utils.buffer_tokens[%d] = %s\n", depth, n->utils.buffer_tokens[depth]);
         depth++;
         n->utils.buffer_tokens[depth] = strtok(NULL, delimiter);
     }
