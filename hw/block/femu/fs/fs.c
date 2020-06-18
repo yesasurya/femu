@@ -236,7 +236,7 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 
     struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
-        uint64_t inode_number = fs_get_inode_directory_by_name(n->utils.buffer_tokens[depth], parent_inode);
+        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[depth], parent_inode);
         if (inode_number == FS_NO_INODE_FOUND) {
             parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[depth], parent_inode);
         }
@@ -376,7 +376,7 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: INODE TABLE\n");
     printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
     printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_directory, n->metadata.max_directory_total);
-    boolean is_checked[n->metadata.max_file_total + n->metadata.max_directory_total + 1];
+    bool is_checked[n->metadata.max_file_total + n->metadata.max_directory_total + 1];
     memset(is_checked, false, n->metadata.max_file_total + n->metadata.max_directory_total + 1);
 
     uint64_t total_all_inodes = n->metadata.max_file_total + n->metadata.max_directory_total;
@@ -390,7 +390,7 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     return NVME_SUCCESS;
 }
 
-uint64_t print_inode(struct fs_inode *inode, int depth, boolean *is_checked) {
+uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
     for (int i = 0; i < depth; i++) {
         printf("    ");
     }
