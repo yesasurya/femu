@@ -152,7 +152,7 @@ int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_in
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
-        if (strcmp(filename, inode->filename) == 0 && inode->parent_inode == parent_inode) {
+        if (strcmp(filename, inode->filename) == 0 && inode->parent_inode == parent_inode && inode->is_used) {
             return inode->number;
         }
     }
