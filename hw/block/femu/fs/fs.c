@@ -134,13 +134,23 @@ int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
     return FS_NO_INODE_AVAILABLE;
 }
 
-int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename) {
+int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
+    if (parent_inode) {
+        for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
+            struct fs_inode *inode = &n->inode_table.inodes[i];
+            if (strcmp(filename, inode->filename) == 0 && inode->parent_inode == parent_inode) {
+                return inode->number;
+            }
+        }
+    }
+
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
         if (strcmp(filename, inode->filename) == 0) {
             return inode->number;
         }
     }
+
     return FS_NO_INODE_FOUND;
 }
 
@@ -212,14 +222,24 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
         n->utils.buffer_tokens[depth] = strtok(NULL, delimiter);
     }
 
-    if (depth > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
+    int new_directory_required = 0;
+    for (int i = 0; i < depth; i++) {
+        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[depth], NULL);
+        if (inode_number == FS_NO_INODE_FOUND) {
+            new_directory_required++;
+        }
+    }
+    if (new_directory_required > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
         printf("YESA LOG: Failed. Free inodes are not enough.\n");
         return;
     }
 
     struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
-        parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[i], parent_inode);
+        uint64_t inode_number = fs_get_inode_directory_by_name(n->utils.buffer_tokens[depth], parent_inode);
+        if (inode_number == FS_NO_INODE_FOUND) {
+            parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[depth], parent_inode);
+        }
     }
 }
 
@@ -356,18 +376,30 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: INODE TABLE\n");
     printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
     printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_directory, n->metadata.max_directory_total);
-    for (int i = 1; i <= n->metadata.max_file_total; i++) {
+    boolean is_checked[n->metadata.max_file_total + n->metadata.max_directory_total + 1];
+    memset(is_checked, false, n->metadata.max_file_total + n->metadata.max_directory_total + 1);
+
+    uint64_t total_all_inodes = n->metadata.max_file_total + n->metadata.max_directory_total;
+    for (int i = 1; i <= total_all_inodes; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
-        if (inode->is_used) {
-            printf("YESA LOG: (%" PRIu64 ", %s)\n", inode->number, inode->filename);
-        }
-    }
-    for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
-        struct fs_inode *inode = &n->inode_table.inodes[i];
-        if (inode->is_used) {
-            printf("YESA LOG: (%" PRIu64 ", %s)\n", inode->number, inode->filename);
+        if (inode->is_used && !is_checked[i]) {
+            print_inode(inode, 0, is_checked);
         }
     }
 
     return NVME_SUCCESS;
+}
+
+uint64_t print_inode(struct fs_inode *inode, int depth, boolean *is_checked) {
+    for (int i = 0; i < depth; i++) {
+        printf("    ");
+    }
+    printf("(%" PRIu64 ", %s)\n", inode->number, inode->filename);
+    is_checked[inode->number] = true;
+    for (int i = 1; i <= inode->num_children_inodes; i++) {
+        struct fs_inode *child_inode = inode->children_inodes[i];
+        if (!is_checked[child_inode->number]) {
+            print_inode(child_inode, depth + 1, is_checked);
+        }
+    }
 }
