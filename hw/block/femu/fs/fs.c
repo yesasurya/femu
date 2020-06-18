@@ -143,18 +143,9 @@ int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
 
 int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    if (parent_inode) {
-        for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
-            struct fs_inode *inode = &n->inode_table.inodes[i];
-            if (strcmp(filename, inode->filename) == 0 && inode->parent_inode == parent_inode) {
-                return inode->number;
-            }
-        }
-    }
-
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
-        if (strcmp(filename, inode->filename) == 0) {
+        if (strcmp(filename, inode->filename) == 0 && inode->parent_inode == parent_inode) {
             return inode->number;
         }
     }
