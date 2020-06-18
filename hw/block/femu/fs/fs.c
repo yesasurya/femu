@@ -144,7 +144,6 @@ int64_t fs_get_unused_inode_directory(FemuCtrl *n) {
 int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     if (parent_inode) {
-        printf("YESA LOG: A\n");
         for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
             struct fs_inode *inode = &n->inode_table.inodes[i];
             if (strcmp(filename, inode->filename) == 0 && inode->parent_inode == parent_inode) {
@@ -153,16 +152,12 @@ int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_in
         }
     }
 
-    printf("YESA LOG: B\n");
-    printf("YESA LOG: %s\n", filename);
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
-        printf("YESA LOG: Iteration#%d with inode->filename = %s\n", i, inode->filename);
         if (strcmp(filename, inode->filename) == 0) {
             return inode->number;
         }
     }
-    printf("YESA LOG: %C\n");
 
     return FS_NO_INODE_FOUND;
 }
@@ -243,7 +238,6 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 
     int new_directory_required = 0;
     for (int i = 0; i < depth; i++) {
-        printf("YESA LOG: A\n");
         uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], NULL);
         if (inode_number == FS_NO_INODE_FOUND) {
             new_directory_required++;
@@ -256,7 +250,6 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 
     struct fs_inode *parent_inode = NULL;
     for (int i = 0; i < depth; i++) {
-        printf("YESA LOG: B\n");
         uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], parent_inode);
         if (inode_number == FS_NO_INODE_FOUND) {
             parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[i], parent_inode);
