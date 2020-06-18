@@ -268,6 +268,7 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     if (inode->num_children_inodes == 0) {
         inode->is_used = false;
+        n->inode_table.num_used_inode_directory--;
 
         struct fs_inode *parent_inode = inode->parent_inode;
         if (!parent_inode) {
@@ -278,8 +279,6 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
         while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]->is_used) {
             parent_inode->lowest_index_avail_child_inode++;
         }
-
-        n->inode_table.num_used_inode_directory--;
         return;
     }
 
