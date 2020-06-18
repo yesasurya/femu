@@ -264,7 +264,9 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
 
 void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
+    printf("YESA LOG: Deleting (%" PRIu64 ", %s)\n", inode->number, inode->filename);
     if (inode->num_children_inodes == 0) {
+        printf("YESA LOG: This does not have children.\n");
         inode->is_used = false;
         n->inode_table.num_used_inode_directory--;
 
@@ -291,9 +293,10 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
         return;
     }
 
+    printf("YESA LOG: This has children.\n");
     for (int i = 1; i <= inode->max_num_children_inodes; i++) {
         struct fs_inode *child_inode = inode->children_inodes[i];
-        if (child_inode->is_used) {
+        if (child_inode) {
             _fs_delete_directory(n, child_inode);
         }
     }
