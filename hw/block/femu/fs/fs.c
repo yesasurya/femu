@@ -277,6 +277,15 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
         while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]) {
             parent_inode->lowest_index_avail_child_inode++;
         }
+
+        for (int i = 1; i <= parent_inode->max_num_children_inodes; i++) {
+            if (parent_inode->children_inodes[i] == inode) {
+                parent_inode->children_inodes[i] = NULL;
+                break;
+            }
+        }
+        inode->parent_inode = NULL;
+
         return;
     }
 
@@ -434,7 +443,7 @@ uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
     return NVME_SUCCESS;
 }
 
-uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
+void print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     for (int i = 0; i < depth; i++) {
         printf("    ");
@@ -445,9 +454,13 @@ uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
         printf("(%" PRIu64 ", %s, child of UNKNOWN)\n", inode->number, inode->filename);
     }
     is_checked[inode->number] = true;
+    if (inode->type == FS_INODE_FILE) {
+        return;
+    }
+    
     for (int i = 1; i <= inode->num_children_inodes; i++) {
         struct fs_inode *child_inode = inode->children_inodes[i];
-        if (!is_checked[child_inode->number]) {
+        if (child_inode && !is_checked[child_inode->number]) {
             print_inode(child_inode, depth + 1, is_checked);
         }
     }
