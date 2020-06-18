@@ -371,6 +371,20 @@ uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
     return NVME_SUCCESS;
 }
 
+uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
+    for (int i = 0; i < depth; i++) {
+        printf("    ");
+    }
+    printf("(%" PRIu64 ", %s)\n", inode->number, inode->filename);
+    is_checked[inode->number] = true;
+    for (int i = 1; i <= inode->num_children_inodes; i++) {
+        struct fs_inode *child_inode = inode->children_inodes[i];
+        if (!is_checked[child_inode->number]) {
+            print_inode(child_inode, depth + 1, is_checked);
+        }
+    }
+}
+
 uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: FS Visualization\n");
     printf("YESA LOG: INODE TABLE\n");
@@ -388,18 +402,4 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     }
 
     return NVME_SUCCESS;
-}
-
-uint64_t print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
-    for (int i = 0; i < depth; i++) {
-        printf("    ");
-    }
-    printf("(%" PRIu64 ", %s)\n", inode->number, inode->filename);
-    is_checked[inode->number] = true;
-    for (int i = 1; i <= inode->num_children_inodes; i++) {
-        struct fs_inode *child_inode = inode->children_inodes[i];
-        if (!is_checked[child_inode->number]) {
-            print_inode(child_inode, depth + 1, is_checked);
-        }
-    }
 }
