@@ -464,7 +464,7 @@ void print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
         return;
     }
 
-    for (int i = 1; i <= inode->num_children_inodes; i++) {
+    for (int i = 1; i <= inode->max_num_children_inodes; i++) {
         struct fs_inode *child_inode = inode->children_inodes[i];
         if (child_inode && !is_checked[child_inode->number]) {
             print_inode(child_inode, depth + 1, is_checked);
