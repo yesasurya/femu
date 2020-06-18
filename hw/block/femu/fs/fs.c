@@ -307,6 +307,7 @@ void fs_delete_directory(FemuCtrl *n, char *filename) {
         }
         parent_inode = &n->inode_table.inodes[inode_number];
     }
+    _fs_delete_directory(n, parent_inode);
 }
 
 void fs_init_inode_table(FemuCtrl *n) {
