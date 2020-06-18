@@ -154,12 +154,15 @@ int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_in
     }
 
     printf("YESA LOG: B\n");
+    printf("YESA LOG: %s\n", filename);
     for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
+        printf("YESA LOG: Iteration#%d with inode->filename = %s\n", i, inode->filename);
         if (strcmp(filename, inode->filename) == 0) {
             return inode->number;
         }
     }
+    printf("YESA LOG: %C\n");
 
     return FS_NO_INODE_FOUND;
 }
