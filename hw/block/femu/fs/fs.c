@@ -300,7 +300,7 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
             _fs_delete_directory(n, child_inode);
         }
     }
-
+    _fs_delete_directory(n, inode);
 }
 
 void fs_delete_directory(FemuCtrl *n, char *filename) {
