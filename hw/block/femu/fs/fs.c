@@ -240,9 +240,10 @@ struct fs_inode* fs_create_directory(FemuCtrl *n, char *filename) {
     return parent_inode;
 }
 
-struct fs_inode* fs_create_directory_from_file_creation(FemuCtrl *n, int depth_to_last_directory) {
+struct fs_inode* fs_create_directory_from_file_creation(FemuCtrl *n, int depth) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
 
+    int depth_to_last_directory = depth - 1;
     int new_directory_required = 0;
     for (int i = 0; i < depth_to_last_directory; i++) {
         uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], NULL);
@@ -256,6 +257,7 @@ struct fs_inode* fs_create_directory_from_file_creation(FemuCtrl *n, int depth_t
     }
 
     struct fs_inode *parent_inode = NULL;
+    printf("YESA LOG: depth_to_last_directory = %d\n", depth_to_last_directory);
     for (int i = 0; i < depth_to_last_directory; i++) {
         uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], parent_inode);
         if (inode_number == FS_NO_INODE_FOUND) {
@@ -366,10 +368,10 @@ void fs_create_file(FemuCtrl *n, char *filename) {
     int depth = fs_parse_filename(n, filename);
     struct fs_inode *parent_inode = NULL;
     if (depth > 1) {
-        parent_inode = fs_create_directory_from_file_creation(n, depth - 1);
+        parent_inode = fs_create_directory_from_file_creation(n, depth);
     }
 
-    _fs_create_file(n, n->utils.buffer_tokens[0], parent_inode);
+    _fs_create_file(n, n->utils.buffer_tokens[depth -1], parent_inode);
 }
 
 void fs_delete_file(FemuCtrl *n, char *filename) {
