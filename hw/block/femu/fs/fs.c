@@ -89,30 +89,36 @@ void fs_init_utils(FemuCtrl *n) {
 void fs_init_inode_file(FemuCtrl *n, uint64_t number) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     struct fs_inode *inode = &n->inode_table.inodes[number];
+    inode->is_used = false;
     inode->type = FS_INODE_FILE;
     inode->filename = malloc(n->page_size);
     inode->number = number;
     inode->address = (number - 1) * n->metadata.max_file_size;
     inode->length = 0;
-    inode->is_used = false;
     inode->parent_inode = NULL;
+    inode->lowest_index_avail_child_inode = 0;
+    inode->max_num_children_inodes = 0;
+    inode->num_children_inodes = 0;
+    inode->children_inodes = NULL;
 }
 
 void fs_init_inode_directory(FemuCtrl *n, uint64_t number) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     struct fs_inode *inode = &n->inode_table.inodes[number];
+    inode->is_used = false;
     inode->type = FS_INODE_DIRECTORY;
     inode->filename = malloc(n->page_size);
     inode->number = number;
+    inode->address = 0;
+    inode->length = 0;
+    inode->parent_inode = NULL;
+    inode->lowest_index_avail_child_inode = 1;
     inode->max_num_children_inodes = n->metadata.max_directory_total;
     inode->num_children_inodes = 0;
-    inode->lowest_index_avail_child_inode = 1;
     inode->children_inodes = malloc(sizeof(struct fs_inode*) * (inode->max_num_children_inodes + 1));
     for (int i = 0; i <= inode->max_num_children_inodes; i++) {
         inode->children_inodes[i] = NULL;
     }
-    inode->is_used = false;
-    inode->parent_inode = NULL;
 }
 
 int64_t fs_get_unused_inode_file(FemuCtrl *n) {
@@ -406,7 +412,7 @@ void fs_init_inode_table(FemuCtrl *n) {
         fs_init_inode_file(n, i);
     }
 
-    for (int i = n->metadata.max_file_total; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
+    for (int i = n->metadata.max_file_total + 1; i <= n->metadata.max_file_total + n->metadata.max_directory_total; i++) {
         fs_init_inode_directory(n, i);
     }
 }
@@ -542,9 +548,9 @@ void print_inode(struct fs_inode *inode, int depth, bool *is_checked, char *seri
 uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 
-    //printf("YESA LOG: FS Visualization\n");
-    //printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
-    //printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_directory, n->metadata.max_directory_total);
+    printf("YESA LOG: FS Visualization\n");
+    printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
+    printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_directory, n->metadata.max_directory_total);
     bool is_checked[n->metadata.max_file_total + n->metadata.max_directory_total + 1];
     memset(is_checked, false, n->metadata.max_file_total + n->metadata.max_directory_total + 1);
 
