@@ -448,17 +448,22 @@ uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
     return NVME_SUCCESS;
 }
 
-void print_inode(struct fs_inode *inode, int depth, bool *is_checked) {
+void print_inode(struct fs_inode *inode, int depth, bool *is_checked, char *serialized) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    printf("YESA LOG: Displaying (%" PRIu64 ", %s) which has children = %" PRIu64 "\n", inode->number, inode->filename, inode->num_children_inodes);
     for (int i = 0; i < depth; i++) {
         printf("    ");
     }
+
+    char *serialized_entry = malloc(4096);
     if (inode->parent_inode) {
+        sprintf(serialized_entry, "[(%" PRIu64 ",%s)->(%" PRIu64 ",%s)]", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
         printf("(%" PRIu64 ", %s, child of (%" PRIu64 ", %s))\n", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
     } else {
+        sprintf(serialized_entry, "[(%" PRIu64 ",%s)->()]", inode->number, inode->filename);
         printf("(%" PRIu64 ", %s, child of UNKNOWN)\n", inode->number, inode->filename);
     }
+    strcat(serialized, serialized_entry);
+
     is_checked[inode->number] = true;
     if (inode->type == FS_INODE_FILE) {
         return;
@@ -481,6 +486,8 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     bool is_checked[n->metadata.max_file_total + n->metadata.max_directory_total + 1];
     memset(is_checked, false, n->metadata.max_file_total + n->metadata.max_directory_total + 1);
 
+    char *serialized = malloc(100 * n->page_size);
+
     uint64_t total_all_inodes = n->metadata.max_file_total + n->metadata.max_directory_total;
     for (int i = 1; i <= total_all_inodes; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
@@ -488,6 +495,7 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
             print_inode(inode, 0, is_checked);
         }
     }
+    printf("YESA LOG: serialized = %s\n", serialized);
 
     return NVME_SUCCESS;
 }
