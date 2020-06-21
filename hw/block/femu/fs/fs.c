@@ -161,17 +161,8 @@ int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_in
     return FS_NO_INODE_FOUND;
 }
 
-void fs_create_file(FemuCtrl *n, char *filename) {
-    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    uint64_t inode_number = fs_get_unused_inode_file(n);
-    if (inode_number == FS_NO_INODE_AVAILABLE) {
-        printf("YESA LOG: Failed. All inodes have been used.\n");
-        return;
-    }
-
-    int depth = fs_parse_filename(n, filename);
-
-    inode_number = fs_get_inode_file_by_name(n, n->utils.buffer_tokens[0], NULL);
+struct fs_inode* _fs_create_file(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
+    inode_number = fs_get_inode_file_by_name(n, filename, NULL);
     if (inode_number != FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. File already exists.\n");
         return;
@@ -183,12 +174,41 @@ void fs_create_file(FemuCtrl *n, char *filename) {
         return;
     }
 
-    printf("YESA LOG: Success. Creating inode with name = %s\n", n->utils.buffer_tokens[0]);
+    printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
     struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     assert(inode->type == FS_INODE_FILE);
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
+    inode->parent_inode = parent_inode;
+
+    if (parent_inode) {
+        parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode] = inode;
+        while (parent_inode->children_inodes[parent_inode->lowest_index_avail_child_inode]) {
+            parent_inode->lowest_index_avail_child_inode++;
+            if (parent_inode->lowest_index_avail_child_inode > parent_inode->max_num_children_inodes) {
+                break;
+            }
+        }
+        parent_inode->num_children_inodes++;
+    }
     n->inode_table.num_used_inode_file++;
+}
+
+void fs_create_file(FemuCtrl *n, char *filename) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
+    uint64_t inode_number = fs_get_unused_inode_file(n);
+    if (inode_number == FS_NO_INODE_AVAILABLE) {
+        printf("YESA LOG: Failed. All inodes have been used.\n");
+        return;
+    }
+
+    int depth = fs_parse_filename(n, filename);
+    struct fs_inode *parent_inode = NULL;
+    if (depth > 1) {
+        parent_inode = fs_create_directory_from_file_creation(n, depth - 1);
+    }
+
+    _fs_create_file(n, n->utils.buffer_tokens[0], parent_inode);
 }
 
 void fs_delete_file(FemuCtrl *n, char *filename) {
@@ -242,9 +262,11 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
     return inode;
 }
 
-void fs_create_directory(FemuCtrl *n, char *filename) {
+struct fs_inode* fs_create_directory(FemuCtrl *n, char *filename) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    int depth = fs_parse_filename(n, filename);
+    if (!is_from_file_creation) {
+        int depth = fs_parse_filename(n, filename);
+    }
 
     int new_directory_required = 0;
     for (int i = 0; i < depth; i++) {
@@ -267,6 +289,36 @@ void fs_create_directory(FemuCtrl *n, char *filename) {
             parent_inode = &n->inode_table.inodes[inode_number];
         }
     }
+
+    return parent_inode;
+}
+
+struct fs_inode* fs_create_directory_from_file_creation(FemuCtrl *n, int depth_to_last_directory) {
+    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
+
+    int new_directory_required = 0;
+    for (int i = 0; i < depth_to_last_directory; i++) {
+        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], NULL);
+        if (inode_number == FS_NO_INODE_FOUND) {
+            new_directory_required++;
+        }
+    }
+    if (new_directory_required > (n->metadata.max_directory_total - n->inode_table.num_used_inode_directory)) {
+        printf("YESA LOG: Failed. Free inodes are not enough.\n");
+        return;
+    }
+
+    struct fs_inode *parent_inode = NULL;
+    for (int i = 0; i < depth_to_last_directory; i++) {
+        uint64_t inode_number = fs_get_inode_directory_by_name(n, n->utils.buffer_tokens[i], parent_inode);
+        if (inode_number == FS_NO_INODE_FOUND) {
+            parent_inode = _fs_create_directory(n, n->utils.buffer_tokens[i], parent_inode);
+        } else {
+            parent_inode = &n->inode_table.inodes[inode_number];
+        }
+    }
+
+    return parent_inode;
 }
 
 void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
