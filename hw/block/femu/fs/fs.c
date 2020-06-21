@@ -162,7 +162,7 @@ int64_t fs_get_inode_directory_by_name(FemuCtrl *n, char *filename, struct fs_in
 }
 
 struct fs_inode* _fs_create_file(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
-    inode_number = fs_get_inode_file_by_name(n, filename, NULL);
+    uint64_t inode_number = fs_get_inode_file_by_name(n, filename, NULL);
     if (inode_number != FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. File already exists.\n");
         return;
@@ -264,9 +264,7 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
 
 struct fs_inode* fs_create_directory(FemuCtrl *n, char *filename) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    if (!is_from_file_creation) {
-        int depth = fs_parse_filename(n, filename);
-    }
+    int depth = fs_parse_filename(n, filename);
 
     int new_directory_required = 0;
     for (int i = 0; i < depth; i++) {
