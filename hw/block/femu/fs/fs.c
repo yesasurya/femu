@@ -472,7 +472,7 @@ void print_inode(struct fs_inode *inode, int depth, bool *is_checked, char *seri
     for (int i = 1; i <= inode->max_num_children_inodes; i++) {
         struct fs_inode *child_inode = inode->children_inodes[i];
         if (child_inode && !is_checked[child_inode->number]) {
-            print_inode(child_inode, depth + 1, is_checked);
+            print_inode(child_inode, depth + 1, is_checked, serialized);
         }
     }
 }
@@ -492,7 +492,7 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     for (int i = 1; i <= total_all_inodes; i++) {
         struct fs_inode *inode = &n->inode_table.inodes[i];
         if (inode->is_used && !is_checked[i]) {
-            print_inode(inode, 0, is_checked);
+            print_inode(inode, 0, is_checked, serialized);
         }
     }
     printf("YESA LOG: serialized = %s\n", serialized);
