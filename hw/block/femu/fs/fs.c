@@ -176,6 +176,13 @@ void fs_create_file(FemuCtrl *n, char *filename) {
         printf("YESA LOG: Failed. File already exists.\n");
         return;
     }
+
+    inode_number = fs_get_unused_inode_file(n);
+    if (inode_number == FS_NO_INODE_AVAILABLE) {
+        printf("YESA LOG: Failed. Free inodes are not enough.\n");
+        return;
+    }
+
     printf("YESA LOG: Success. Creating inode with name = %s\n", n->utils.buffer_tokens[0]);
     struct fs_inode *inode = &n->inode_table.inodes[inode_number];
     assert(inode->type == FS_INODE_FILE);
@@ -202,6 +209,12 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
     uint64_t inode_number = fs_get_inode_directory_by_name(n, filename, parent_inode);
     if (inode_number != FS_NO_INODE_FOUND) {
         printf("YESA LOG: Failed. Directory already exists.\n");
+        return;
+    }
+
+    inode_number = fs_get_unused_inode_directory(n);
+    if (inode_number == FS_NO_INODE_AVAILABLE) {
+        printf("YESA LOG: Failed. Free inodes are not enough.\n");
         return;
     }
 
