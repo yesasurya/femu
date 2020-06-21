@@ -518,10 +518,10 @@ void print_inode(struct fs_inode *inode, int depth, bool *is_checked, char *seri
 
     char *serialized_entry = malloc(4096);
     if (inode->parent_inode) {
-        sprintf(serialized_entry, "(%" PRIu64 ",%s)>(%" PRIu64 ",%s)*", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
+        sprintf(serialized_entry, "%" PRIu64 ",%s>%" PRIu64 ",%s*", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
 //        printf("(%" PRIu64 ", %s, child of (%" PRIu64 ", %s))\n", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
     } else {
-        sprintf(serialized_entry, "(%" PRIu64 ",%s)->(0,ROOT)*", inode->number, inode->filename);
+        sprintf(serialized_entry, "%" PRIu64 ",%s->0,ROOT*", inode->number, inode->filename);
 //        printf("(%" PRIu64 ", %s, child of UNKNOWN)\n", inode->number, inode->filename);
     }
     strcat(serialized, serialized_entry);
