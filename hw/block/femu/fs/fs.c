@@ -185,16 +185,16 @@ void fs_create_file(FemuCtrl *n, char *filename) {
 }
 
 void fs_delete_file(FemuCtrl *n, char *filename) {
-    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    uint64_t inode_number = fs_get_inode_file_by_name(n, filename);
-    if (inode_number == FS_NO_INODE_FOUND) {
-        printf("YESA LOG: Failed. File does not exists.\n");
-        return;
-    }
-    printf("YESA LOG: Success. Deleting inode with name = %s\n", filename);
-    struct fs_inode *inode = &n->inode_table.inodes[inode_number];
-    inode->is_used = false;
-    n->inode_table.num_used_inode_file--;
+//    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
+//    uint64_t inode_number = fs_get_inode_file_by_name(n, filename);
+//    if (inode_number == FS_NO_INODE_FOUND) {
+//        printf("YESA LOG: Failed. File does not exists.\n");
+//        return;
+//    }
+//    printf("YESA LOG: Success. Deleting inode with name = %s\n", filename);
+//    struct fs_inode *inode = &n->inode_table.inodes[inode_number];
+//    inode->is_used = false;
+//    n->inode_table.num_used_inode_file--;
 }
 
 struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
@@ -229,7 +229,7 @@ struct fs_inode* _fs_create_directory(FemuCtrl *n, char *filename, struct fs_ino
     return inode;
 }
 
-void fs_create_directory(FemuCtrl *n, char *filename, bool contain_file) {
+void fs_create_directory(FemuCtrl *n, char *filename) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     int depth = fs_parse_filename(n, filename);
 
