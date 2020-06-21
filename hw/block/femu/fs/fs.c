@@ -512,17 +512,17 @@ uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
 
 void print_inode(struct fs_inode *inode, int depth, bool *is_checked, char *serialized) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    for (int i = 0; i < depth; i++) {
-        printf("    ");
-    }
+//    for (int i = 0; i < depth; i++) {
+//        printf("    ");
+//    }
 
     char *serialized_entry = malloc(4096);
     if (inode->parent_inode) {
-        sprintf(serialized_entry, "[(%" PRIu64 ",%s)->(%" PRIu64 ",%s)]", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
-        printf("(%" PRIu64 ", %s, child of (%" PRIu64 ", %s))\n", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
+        sprintf(serialized_entry, "(%" PRIu64 ",%s)>(%" PRIu64 ",%s)", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
+//        printf("(%" PRIu64 ", %s, child of (%" PRIu64 ", %s))\n", inode->number, inode->filename, inode->parent_inode->number, inode->parent_inode->filename);
     } else {
-        sprintf(serialized_entry, "[(%" PRIu64 ",%s)->()]", inode->number, inode->filename);
-        printf("(%" PRIu64 ", %s, child of UNKNOWN)\n", inode->number, inode->filename);
+        sprintf(serialized_entry, "(%" PRIu64 ",%s)->(0,ROOT)", inode->number, inode->filename);
+//        printf("(%" PRIu64 ", %s, child of UNKNOWN)\n", inode->number, inode->filename);
     }
     strcat(serialized, serialized_entry);
 
@@ -542,11 +542,9 @@ void print_inode(struct fs_inode *inode, int depth, bool *is_checked, char *seri
 uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
 
-    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    printf("YESA LOG: FS Visualization\n");
-    printf("YESA LOG: INODE TABLE\n");
-    printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
-    printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_directory, n->metadata.max_directory_total);
+    //printf("YESA LOG: FS Visualization\n");
+    //printf("YESA LOG: Num used inode files = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_file, n->metadata.max_file_total);
+    //printf("YESA LOG: Num used inode directory = %" PRIu64 " / %" PRIu64 "\n", n->inode_table.num_used_inode_directory, n->metadata.max_directory_total);
     bool is_checked[n->metadata.max_file_total + n->metadata.max_directory_total + 1];
     memset(is_checked, false, n->metadata.max_file_total + n->metadata.max_directory_total + 1);
 
