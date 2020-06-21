@@ -345,6 +345,7 @@ struct fs_inode* _fs_create_file(FemuCtrl *n, char *filename, struct fs_inode *p
 
     printf("YESA LOG: Success. Creating inode with name = %s\n", filename);
     struct fs_inode *inode = &n->inode_table.inodes[inode_number];
+    printf("YESA LOG: inode_number = %" PRIu64 "\n", inode_number);
     assert(inode->type == FS_INODE_FILE);
     memcpy(inode->filename, filename, n->page_size);
     inode->is_used = true;
