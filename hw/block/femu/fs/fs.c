@@ -478,6 +478,8 @@ void print_inode(struct fs_inode *inode, int depth, bool *is_checked, char *seri
 }
 
 uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
+
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     printf("YESA LOG: FS Visualization\n");
     printf("YESA LOG: INODE TABLE\n");
@@ -496,6 +498,7 @@ uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
         }
     }
     printf("YESA LOG: serialized = %s\n", serialized);
+    address_space_rw(&address_space_memory, fs_cmd->prp1, MEMTXATTRS_UNSPECIFIED, serialized, 100 * n->page_size, true);
 
     return NVME_SUCCESS;
 }
