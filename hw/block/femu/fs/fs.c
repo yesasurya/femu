@@ -276,7 +276,7 @@ struct fs_inode* fs_create_directory_from_file_creation(FemuCtrl *n, int depth) 
     return parent_inode;
 }
 
-void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
+void _fs_delete(FemuCtrl *n, struct fs_inode *inode) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     if (inode->num_children_inodes == 0) {
         inode->is_used = false;
@@ -308,13 +308,13 @@ void _fs_delete_directory(FemuCtrl *n, struct fs_inode *inode) {
     for (int i = 1; i <= inode->max_num_children_inodes; i++) {
         struct fs_inode *child_inode = inode->children_inodes[i];
         if (child_inode) {
-            _fs_delete_directory(n, child_inode);
+            _fs_delete(n, child_inode);
         }
     }
-    _fs_delete_directory(n, inode);
+    _fs_delete(n, inode);
 }
 
-void fs_delete_directory(FemuCtrl *n, char *filename) {
+void fs_delete(FemuCtrl *n, char *filename) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     int depth = fs_parse_filename(n, filename);
 
@@ -327,7 +327,7 @@ void fs_delete_directory(FemuCtrl *n, char *filename) {
         }
         parent_inode = &n->inode_table.inodes[inode_number];
     }
-    _fs_delete_directory(n, parent_inode);
+    _fs_delete(n, parent_inode);
 }
 
 struct fs_inode* _fs_create_file(FemuCtrl *n, char *filename, struct fs_inode *parent_inode) {
@@ -379,19 +379,6 @@ void fs_create_file(FemuCtrl *n, char *filename) {
     }
 
     _fs_create_file(n, n->utils.buffer_tokens[depth -1], parent_inode);
-}
-
-void fs_delete_file(FemuCtrl *n, char *filename) {
-//    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-//    uint64_t inode_number = fs_get_inode_file_by_name(n, filename);
-//    if (inode_number == FS_NO_INODE_FOUND) {
-//        printf("YESA LOG: Failed. File does not exists.\n");
-//        return;
-//    }
-//    printf("YESA LOG: Success. Deleting inode with name = %s\n", filename);
-//    struct fs_inode *inode = &n->inode_table.inodes[inode_number];
-//    inode->is_used = false;
-//    n->inode_table.num_used_inode_file--;
 }
 
 void fs_init_inode_table(FemuCtrl *n) {
@@ -487,16 +474,6 @@ uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     return NVME_SUCCESS;
 }
 
-uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
-    printf("YESA LOG: %s, %s\n", __FILE__, __func__);
-    NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
-    uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
-    address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
-    fs_delete_file(n, n->utils.buffer_prp1[index_poller]);
-
-    return NVME_SUCCESS;
-}
-
 uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
@@ -507,12 +484,12 @@ uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poll
     return NVME_SUCCESS;
 }
 
-uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
+uint64_t nvme_fs_delete(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller) {
     printf("YESA LOG: %s, %s\n", __FILE__, __func__);
     NvmeFsCmd *fs_cmd = (NvmeFsCmd *)cmd;
     uint64_t prp1 = le64_to_cpu(fs_cmd->prp1);
     address_space_rw(&address_space_memory, prp1, MEMTXATTRS_UNSPECIFIED, n->utils.buffer_prp1[index_poller], n->page_size, false);
-    fs_delete_directory(n, n->utils.buffer_prp1[index_poller]);
+    fs_delete(n, n->utils.buffer_prp1[index_poller]);
 
     return NVME_SUCCESS;
 }

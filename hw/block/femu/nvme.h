@@ -1280,9 +1280,8 @@ extern uint64_t nvme_fs_read(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int i
 extern uint64_t nvme_fs_write(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd, int index_poller, int sq_id);
 extern uint64_t nvme_fs_lseek(FemuCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd);
 extern uint64_t nvme_fs_create_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
-extern uint64_t nvme_fs_delete_file(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
 extern uint64_t nvme_fs_create_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
-extern uint64_t nvme_fs_delete_directory(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
+extern uint64_t nvme_fs_delete(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
 extern uint64_t nvme_fs_visualize(FemuCtrl *n, NvmeCmd *cmd, uint64_t index_poller);
 
 static inline bool OCSSD(FemuCtrl *n)
